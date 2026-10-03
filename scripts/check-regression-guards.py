@@ -82,10 +82,24 @@ def check_edt_contracts() -> None:
     threading = read("src/main/kotlin/dev/shamar/adonis/ide/AdonisIndexThreading.kt")
     if "shouldDeferRebuild" not in threading:
         err("REGRESSION(edt): AdonisIndexThreading.shouldDeferRebuild missing")
+    if "isReadAccessAllowed" not in threading:
+        err(
+            "REGRESSION(edt): shouldDeferRebuild must consider ReadAction "
+            "(refs/highlighting must not wait on Node)"
+        )
 
     service = read("src/main/kotlin/dev/shamar/adonis/ide/AdonisProjectService.kt")
     if "AdonisIndexThreading.shouldDeferRebuild" not in service:
         err("REGRESSION(edt): AdonisProjectService must use AdonisIndexThreading")
+    if "isReadAccessAllowed" not in service:
+        err("REGRESSION(edt): AdonisProjectService must pass isReadAccessAllowed")
+
+    refs = read("src/main/kotlin/dev/shamar/adonis/ide/AdonisReferenceContributor.kt")
+    if "cachedIndex()" not in refs:
+        err(
+            "REGRESSION(edt): AdonisReferenceProvider must prefer cachedIndex() "
+            "under ReadAction"
+        )
 
 
 def check_form_contracts() -> None:
@@ -110,16 +124,35 @@ def check_form_contracts() -> None:
             "REGRESSION(@form): directiveCompletions must seed snippetNames() "
             "so form appears without a warm index"
         )
+    if "wireEnabled" not in catalog:
+        err(
+            "REGRESSION(wire): directiveCompletions must gate wire/persist on "
+            "index.wireEnabled"
+        )
+    index_kt = read("src/main/kotlin/dev/shamar/adonis/ide/AdonisIndex.kt")
+    if "wireEnabled" not in index_kt or "val wire:" not in index_kt:
+        err("REGRESSION(wire): FrameworkEntry.wire / wireEnabled missing")
+    indexer = read("indexer/index.mjs")
+    if "detectWire" not in indexer or "wire," not in indexer:
+        err("REGRESSION(wire): indexer must emit framework.wire via detectWire")
     typed = read("src/main/kotlin/dev/shamar/adonis/ide/EdgeTypedHandler.kt")
     if "scheduleAutoPopup" not in typed:
         err("REGRESSION(@popup): EdgeTypedHandler must scheduleAutoPopup")
-    # Scheduling must happen in charTyped, not only in checkAutoPopup before insert.
     check_fn = typed.split("fun checkAutoPopup", 1)
-    if len(check_fn) == 2 and "scheduleAutoPopup" in check_fn[1].split("fun ", 1)[0]:
+    if len(check_fn) < 2 or "scheduleAutoPopup" not in check_fn[1].split("fun charTyped", 1)[0]:
         err(
-            "REGRESSION(@popup): checkAutoPopup must not scheduleAutoPopup "
-            "(schedule after '@' is inserted in charTyped)"
+            "REGRESSION(@popup): checkAutoPopup must scheduleAutoPopup "
+            "(JetBrains contract — Condition runs on up-to-date PSI)"
         )
+    if "EdgeCompletionConfidence" not in read(
+        "src/main/kotlin/dev/shamar/adonis/ide/EdgeCompletionConfidence.kt"
+    ):
+        err("REGRESSION(@popup): EdgeCompletionConfidence class missing")
+    plugin = read("src/main/resources/META-INF/plugin.xml")
+    if "EdgeCompletionConfidence" not in plugin:
+        err("REGRESSION(@popup): plugin.xml must register EdgeCompletionConfidence")
+    if 'completion.contributor' in plugin and 'order="first"' not in plugin:
+        err("REGRESSION(@popup): completion.contributor should be order=first")
 
 
 def check_plugin_xml() -> None:

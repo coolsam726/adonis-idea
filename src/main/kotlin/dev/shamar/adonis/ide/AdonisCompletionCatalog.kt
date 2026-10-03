@@ -177,6 +177,13 @@ object AdonisCompletionCatalog {
                 out.putIfAbsent(alias, "→ @$real")
             }
         }
+        // Wire tags only when `@shamar/wire` / `app/wire` is detected.
+        if (!index.wireEnabled) {
+            out.remove("wire")
+            out.remove("persist")
+            out.keys.filter { it == "endwire" || it == "endpersist" || it.startsWith("wire.") }
+                .forEach { out.remove(it) }
+        }
         return out.map { (n, d) -> n to d }
     }
 

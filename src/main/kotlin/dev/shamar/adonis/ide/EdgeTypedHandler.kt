@@ -1,17 +1,44 @@
 package dev.shamar.adonis.ide
 
 import com.intellij.codeInsight.AutoPopupController
+import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.codeInsight.editorActions.TypedHandlerDelegate
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Condition
 import com.intellij.psi.PsiFile
 
 /**
  * Edge typing aids:
  * - `{{` closes as `{{  }}` with the caret in the middle
- * - Typing `@` (and continuing a directive name) opens directive completion
+ * - Typing `@` opens the full Edge directive completion list
+ *
+ * Autopopup follows the platform contract: schedule from [checkAutoPopup]
+ * with a [Condition] (PSI is not up to date in that method). [charTyped]
+ * re-schedules after `@` is in the document as a belt-and-suspenders path.
  */
 class EdgeTypedHandler : TypedHandlerDelegate() {
+    override fun checkAutoPopup(
+        c: Char,
+        project: Project,
+        editor: Editor,
+        file: PsiFile,
+    ): Result {
+        if (!isEdge(file)) return Result.CONTINUE
+        // Avoid fighting HTML brace autopairs with our own `{{  }}` helper.
+        if (c == '{' || c == '}') return Result.STOP
+        if (c == '@') {
+            // Condition runs later on up-to-date PSI (after `@` is inserted).
+            AutoPopupController.getInstance(project).scheduleAutoPopup(
+                editor,
+                CompletionType.BASIC,
+                EDGE_FILE,
+            )
+            return Result.STOP
+        }
+        return Result.CONTINUE
+    }
+
     override fun charTyped(
         c: Char,
         project: Project,
@@ -25,7 +52,12 @@ class EdgeTypedHandler : TypedHandlerDelegate() {
                     editor.caretModel.offset.coerceAtMost(editor.document.textLength),
                 )
                 if (c == '@' || CallSiteDetector.detect(before)?.kind == SymbolKind.DIRECTIVE) {
-                    AutoPopupController.getInstance(project).scheduleAutoPopup(editor)
+                    // Force schedule after the character is in the buffer.
+                    AutoPopupController.getInstance(project).scheduleAutoPopup(
+                        editor,
+                        CompletionType.BASIC,
+                        EDGE_FILE,
+                    )
                 }
             }
             if (c == '@') return Result.CONTINUE
@@ -55,25 +87,16 @@ class EdgeTypedHandler : TypedHandlerDelegate() {
         return Result.STOP
     }
 
-    override fun checkAutoPopup(
-        c: Char,
-        project: Project,
-        editor: Editor,
-        file: PsiFile,
-    ): Result {
-        if (!isEdge(file)) return Result.CONTINUE
-        if (c == '{' || c == '}') return Result.STOP
-        if (c == '@') {
-            // Schedule in charTyped after `@` is in the document — not here.
-            return Result.STOP
-        }
-        return Result.CONTINUE
-    }
-
     private fun isDirectiveContinue(c: Char): Boolean =
         c == '!' || c == '.' || c.isLetterOrDigit() || c == '_'
 
-    private fun isEdge(file: PsiFile): Boolean =
-        file.viewProvider.baseLanguage === EdgeLanguage ||
-            EdgeFileType.isEdgeFileName(file.name)
+    companion object {
+        /** True for Edge files (base language or `*.edge` name). */
+        val EDGE_FILE: Condition<PsiFile> = Condition { file ->
+            file.viewProvider.baseLanguage === EdgeLanguage ||
+                EdgeFileType.isEdgeFileName(file.name)
+        }
+
+        fun isEdge(file: PsiFile): Boolean = EDGE_FILE.value(file)
+    }
 }

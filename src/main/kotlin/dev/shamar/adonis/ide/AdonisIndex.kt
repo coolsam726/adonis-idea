@@ -59,8 +59,14 @@ data class AdonisIndex(
     data class FrameworkEntry(
         val adonis: Boolean = true,
         val shamar: Boolean = false,
+        /** True when `@shamar/wire` / `app/wire` / wire views are present. */
+        val wire: Boolean = false,
         val orm: String = "unknown",
     )
+
+    /** Offer `@wire` / `@persist` only when the Wire layer is detected. */
+    val wireEnabled: Boolean
+        get() = framework.wire || wireComponents.isNotEmpty()
 
     data class WireEntry(
         val path: String? = null,

@@ -64,12 +64,23 @@ function packageJson(base) {
   }
 }
 
-function detectShamar(pkg) {
+function detectShamar(pkg, base) {
   const deps = { ...pkg.dependencies, ...pkg.devDependencies }
   return Boolean(
     deps['@shamar/adonis'] ||
       deps['@shamar/core'] ||
-      deps['@shamar/wire'],
+      existsSync(join(base, 'app', 'panels')) ||
+      existsSync(join(base, 'config', 'shamar.ts')),
+  )
+}
+
+/** Wire layer: package and/or app/wire (or wire views). */
+function detectWire(pkg, base) {
+  const deps = { ...pkg.dependencies, ...pkg.devDependencies }
+  return Boolean(
+    deps['@shamar/wire'] ||
+      existsSync(join(base, 'app', 'wire')) ||
+      existsSync(join(base, 'resources', 'views', 'wire')),
   )
 }
 
@@ -647,12 +658,14 @@ function build() {
     }
   }
   const pkg = packageJson(root)
-  const shamar = detectShamar(pkg)
+  const shamar = detectShamar(pkg, root)
   const orm = detectOrm(pkg, root)
   const { envKeys, envOptions } = indexEnv(root)
   const { configKeys, configFiles, configLocations } = indexConfig(root)
   const { models, tables, relations } = indexModels(root, orm)
   const shamarIndex = indexShamar(root, shamar)
+  const wireComponents = indexWire(root)
+  const wire = detectWire(pkg, root) || Object.keys(wireComponents).length > 0
   const routes = indexRoutes(root)
   const controllers = indexControllers(root)
 
@@ -699,7 +712,12 @@ function build() {
     ok: true,
     error: null,
     base_path: root,
-    framework: { adonis: true, shamar: shamar || shamarIndex.panels.length > 0, orm },
+    framework: {
+      adonis: true,
+      shamar: shamar || shamarIndex.panels.length > 0,
+      wire,
+      orm,
+    },
     views,
     routes,
     config_keys: configKeys,
@@ -732,7 +750,7 @@ function build() {
     vite_entries: indexVite(root),
     controller_actions: controllers.actions,
     controller_locations: controllers.locations,
-    wire_components: indexWire(root),
+    wire_components: wireComponents,
     shamar: shamarIndex,
   }
 }

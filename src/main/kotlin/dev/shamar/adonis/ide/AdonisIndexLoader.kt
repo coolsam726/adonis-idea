@@ -150,13 +150,6 @@ object AdonisIndexLoader {
             )
         }
 
-        val frameworkObj = root.getAsJsonObject("framework")
-        val framework = AdonisIndex.FrameworkEntry(
-            adonis = frameworkObj?.get("adonis")?.asBoolean ?: true,
-            shamar = frameworkObj?.get("shamar")?.asBoolean ?: false,
-            orm = frameworkObj?.get("orm")?.asString ?: "unknown",
-        )
-
         val wireComponents = mutableMapOf<String, AdonisIndex.WireEntry>()
         root.getAsJsonObject("wire_components")?.entrySet()?.forEach { (name, value) ->
             val obj = value.asJsonObject
@@ -167,6 +160,14 @@ object AdonisIndexLoader {
                 methods = obj.getAsJsonArray("methods")?.map { it.asString } ?: emptyList(),
             )
         }
+
+        val frameworkObj = root.getAsJsonObject("framework")
+        val framework = AdonisIndex.FrameworkEntry(
+            adonis = frameworkObj?.get("adonis")?.asBoolean ?: true,
+            shamar = frameworkObj?.get("shamar")?.asBoolean ?: false,
+            wire = (frameworkObj?.get("wire")?.asBoolean ?: false) || wireComponents.isNotEmpty(),
+            orm = frameworkObj?.get("orm")?.asString ?: "unknown",
+        )
 
         val shamarEl = root.get("shamar")
         val shamar = parseShamar(

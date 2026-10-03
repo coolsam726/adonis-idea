@@ -16,7 +16,7 @@ class AdonisFullParityTest {
             {
               "base_path": "/tmp/adonis-app",
               "ok": true,
-              "framework": {"adonis": true, "shamar": true, "orm": "mongoose"},
+              "framework": {"adonis": true, "shamar": true, "wire": true, "orm": "mongoose"},
               "views": {
                 "pages/home": "/tmp/adonis-app/resources/views/pages/home.edge",
                 "wire.counter": "/tmp/adonis-app/resources/views/wire/counter.edge",

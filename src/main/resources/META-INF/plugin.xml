@@ -57,12 +57,16 @@
     <editorHighlighterProvider filetype="Edge" implementationClass="dev.shamar.adonis.ide.EdgeEditorHighlighterProvider"/>
     <colorSettingsPage implementation="dev.shamar.adonis.ide.EdgeColorSettingsPage"/>
 
-    <typedHandler implementation="dev.shamar.adonis.ide.EdgeTypedHandler"/>
+    <typedHandler implementation="dev.shamar.adonis.ide.EdgeTypedHandler" order="first"/>
     <lang.braceMatcher language="Edge" implementationClass="dev.shamar.adonis.ide.EdgeBraceMatcher"/>
 
     <configurationType implementation="dev.shamar.adonis.ide.AceConfigurationType"/>
 
-    <completion.contributor language="any" implementationClass="dev.shamar.adonis.ide.AdonisCompletionContributor"/>
+    <!-- order=first so Edge wins over HTML contributors in the dual-PSI root. -->
+    <completion.contributor language="any" implementationClass="dev.shamar.adonis.ide.AdonisCompletionContributor" order="first"/>
+    <!-- Dual-root Edge files often resolve confidence against HTML — never skip after `@`. -->
+    <completion.confidence language="Edge" implementationClass="dev.shamar.adonis.ide.EdgeCompletionConfidence" id="edge" order="first"/>
+    <completion.confidence language="HTML" implementationClass="dev.shamar.adonis.ide.EdgeCompletionConfidence" id="edgeHtml" order="first"/>
     <annotator language="any" implementationClass="dev.shamar.adonis.ide.AdonisAnnotator"/>
     <annotator language="Edge" implementationClass="dev.shamar.adonis.ide.AdonisEdgeStructureAnnotator"/>
     <lang.documentationProvider language="any" implementationClass="dev.shamar.adonis.ide.AdonisDocumentationProvider"/>
