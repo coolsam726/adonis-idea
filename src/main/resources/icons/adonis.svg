@@ -1,39 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" role="img" aria-label="Almasix">
-  <!-- Official Almasix mark (website favicon), filters stripped for JetBrains SVG. -->
-  <defs>
-    <linearGradient id="almasix-tile" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#1A1412"/>
-      <stop offset="1" stop-color="#0F172A"/>
-    </linearGradient>
-    <linearGradient id="almasix-left" x1="140.4" y1="88" x2="256.0" y2="372" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FF7A4D"/>
-      <stop offset="1" stop-color="#F1511B"/>
-    </linearGradient>
-    <linearGradient id="almasix-right" x1="256.0" y1="88" x2="343.1" y2="372" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#F1511B"/>
-      <stop offset="1" stop-color="#B83208"/>
-    </linearGradient>
-    <linearGradient id="almasix-bar" x1="256" y1="232" x2="256" y2="348" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#E3F3FB" stop-opacity="0.95"/>
-      <stop offset="0.4" stop-color="#6BB0D9" stop-opacity="0.78"/>
-      <stop offset="1" stop-color="#4A9BC9" stop-opacity="0.92"/>
-    </linearGradient>
-    <linearGradient id="almasix-bar-glass" x1="256" y1="232" x2="256" y2="300" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.72"/>
-      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.32"/>
-      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
-    </linearGradient>
-    <linearGradient id="almasix-cap" x1="256.0" y1="100" x2="256.0" y2="208" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFFFF" stop-opacity="0.2"/>
-      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
-    </linearGradient>
-  </defs>
-  <rect width="512" height="512" rx="112" fill="url(#almasix-tile)"/>
-  <g shape-rendering="geometricPrecision">
-    <path fill="url(#almasix-left)" d="M256.0 88L140.4 372H197.4L256.0 208Z"/>
-    <path fill="url(#almasix-right)" d="M256.0 88L256.0 208L314.6 372H371.6Z"/>
-    <path fill="url(#almasix-bar)" d="M182.3 300L256.0 232L329.7 300L256.0 348Z"/>
-    <path fill="url(#almasix-bar-glass)" d="M182.3 300L256.0 232L329.7 300L256.0 278Z"/>
-    <path fill="url(#almasix-cap)" d="M256.0 108L229.2 168L256.0 208L282.8 168Z"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" fill="none" role="img" aria-label="AdonisJS">
+  <!-- Official AdonisJS mark from https://adonisjs.com/brand (purple #5943FF) -->
+  <path fill-rule="evenodd" clip-rule="evenodd" fill="#5943FF" d="M0 20C0 36.1303 3.86965 40 20 40C36.1303 40 40 36.1303 40 20C40 3.86965 36.1303 0 20 0C3.86965 0 0 3.86965 0 20ZM8.06517 24.1548L14.3381 9.89816C15.3972 7.4949 17.4338 6.19144 20 6.19144C22.5662 6.19144 24.6028 7.4949 25.6619 9.89816L31.9348 24.1548C32.22 24.8472 32.4644 25.7434 32.4644 26.5173C32.4644 30.061 29.9796 32.5458 26.4359 32.5458C25.2288 32.5458 24.2701 32.2377 23.2997 31.926C22.3054 31.6065 21.2987 31.2831 20 31.2831C18.7162 31.2831 17.6851 31.6094 16.6711 31.9303C15.6903 32.2405 14.7257 32.5458 13.5641 32.5458C10.0204 32.5458 7.53564 30.061 7.53564 26.5173C7.53564 25.7434 7.78004 24.8472 8.06517 24.1548ZM20 12.3828L13.8085 26.3951C15.6415 25.5397 17.7596 25.1324 20 25.1324C22.1588 25.1324 24.3584 25.5397 26.1099 26.3951L20 12.3828Z"/>
 </svg>
