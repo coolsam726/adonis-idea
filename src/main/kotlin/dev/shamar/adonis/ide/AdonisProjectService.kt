@@ -35,9 +35,12 @@ class AdonisProjectService(private val project: Project) {
 
     /**
      * Returns the cached index when warm. On a cold cache:
-     * - background thread / unit tests → builds synchronously
-     * - EDT → schedules a background rebuild and returns a non-blocking placeholder
-     *   (never runs the Node indexer on the EDT).
+     * - unit tests → builds synchronously
+     * - EDT or any ReadAction (refs / highlighting / completion) → schedules a
+     *   background rebuild and returns a non-blocking placeholder
+     * - otherwise (plain pooled thread) → builds synchronously
+     *
+     * Never waits on the Node process under a ReadAction or on the EDT.
      */
     fun index(): AdonisIndex {
         indexRef.get()?.let { return it }
@@ -95,6 +98,7 @@ class AdonisProjectService(private val project: Project) {
         return AdonisIndexThreading.shouldDeferRebuild(
             isDispatchThread = app.isDispatchThread,
             isUnitTestMode = app.isUnitTestMode,
+            isReadAccessAllowed = app.isReadAccessAllowed,
         )
     }
 

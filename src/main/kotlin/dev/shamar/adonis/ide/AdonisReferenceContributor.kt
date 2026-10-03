@@ -38,7 +38,12 @@ class AdonisReferenceProvider : PsiReferenceProvider() {
         val text = element.text
         if (text.isEmpty() || text.length > 800) return PsiReference.EMPTY_ARRAY
 
-        val index = AdonisProjectService.getInstance(element.project).index()
+        // Prefer cache — never trigger a sync Node indexer wait under ReadAction.
+        val service = AdonisProjectService.getInstance(element.project)
+        val index = service.cachedIndex() ?: run {
+            service.index() // schedules background warm when cold; returns placeholder
+            return PsiReference.EMPTY_ARRAY
+        }
         if (!index.ok) return PsiReference.EMPTY_ARRAY
 
         val document = file.viewProvider.document ?: return PsiReference.EMPTY_ARRAY

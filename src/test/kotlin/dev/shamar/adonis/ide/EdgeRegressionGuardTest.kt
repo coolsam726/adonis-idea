@@ -55,6 +55,15 @@ class EdgeRegressionGuardTest : BasePlatformTestCase() {
             AdonisIndexThreading.shouldDeferRebuild(
                 isDispatchThread = true,
                 isUnitTestMode = false,
+                isReadAccessAllowed = false,
+            ),
+        )
+        assertTrue(
+            "REGRESSION(edt): ReadAction (refs/highlighting) must defer Node indexer",
+            AdonisIndexThreading.shouldDeferRebuild(
+                isDispatchThread = false,
+                isUnitTestMode = false,
+                isReadAccessAllowed = true,
             ),
         )
         assertFalse(
@@ -62,13 +71,15 @@ class EdgeRegressionGuardTest : BasePlatformTestCase() {
             AdonisIndexThreading.shouldDeferRebuild(
                 isDispatchThread = true,
                 isUnitTestMode = true,
+                isReadAccessAllowed = true,
             ),
         )
         assertFalse(
-            "REGRESSION(edt): background threads may rebuild synchronously",
+            "REGRESSION(edt): plain background threads may rebuild synchronously",
             AdonisIndexThreading.shouldDeferRebuild(
                 isDispatchThread = false,
                 isUnitTestMode = false,
+                isReadAccessAllowed = false,
             ),
         )
     }

@@ -82,10 +82,24 @@ def check_edt_contracts() -> None:
     threading = read("src/main/kotlin/dev/shamar/adonis/ide/AdonisIndexThreading.kt")
     if "shouldDeferRebuild" not in threading:
         err("REGRESSION(edt): AdonisIndexThreading.shouldDeferRebuild missing")
+    if "isReadAccessAllowed" not in threading:
+        err(
+            "REGRESSION(edt): shouldDeferRebuild must consider ReadAction "
+            "(refs/highlighting must not wait on Node)"
+        )
 
     service = read("src/main/kotlin/dev/shamar/adonis/ide/AdonisProjectService.kt")
     if "AdonisIndexThreading.shouldDeferRebuild" not in service:
         err("REGRESSION(edt): AdonisProjectService must use AdonisIndexThreading")
+    if "isReadAccessAllowed" not in service:
+        err("REGRESSION(edt): AdonisProjectService must pass isReadAccessAllowed")
+
+    refs = read("src/main/kotlin/dev/shamar/adonis/ide/AdonisReferenceContributor.kt")
+    if "cachedIndex()" not in refs:
+        err(
+            "REGRESSION(edt): AdonisReferenceProvider must prefer cachedIndex() "
+            "under ReadAction"
+        )
 
 
 def check_form_contracts() -> None:
