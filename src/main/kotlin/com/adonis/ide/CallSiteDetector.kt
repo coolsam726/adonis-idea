@@ -29,7 +29,7 @@ object CallSiteDetector {
             "load|loadMissing|with_|load_missing|where_has|or_where_has|doesnt_have"
 
     private val METHOD_CALL = Regex(
-        """(?<recv>\b[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*)\.(?<fn>route|route_is|view|config|__|t|trans|env|can|authorize|middleware|disk|render|$RELATION_FNS|$COLUMN_FNS|table|vite|asset|url)\s*\(\s*(?<q>['"])(?<pre>[^'"]*)\z""",
+        """(?<recv>\b[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*)\.(?<fn>route|route_is|view|config|__|t|trans|env|can|authorize|middleware|disk|render|$RELATION_FNS|$COLUMN_FNS|table|vite|asset|url|ace)\s*\(\s*(?<q>['"])(?<pre>[^'"]*)\z""",
         RegexOption.IGNORE_CASE,
     )
 
@@ -40,7 +40,7 @@ object CallSiteDetector {
 
     /** ``redirect().route("…`` — call after ``).``. */
     private val CHAINED_CALL = Regex(
-        """\)\.(?<fn>route|route_is|view|config|__|t|trans|env|can|authorize|middleware|disk|render|$RELATION_FNS|$COLUMN_FNS|table|vite|asset|url|as|use)\s*\(\s*(?<q>['"])(?<pre>[^'"]*)\z""",
+        """\)\.(?<fn>route|route_is|view|config|__|t|trans|env|can|authorize|middleware|disk|render|$RELATION_FNS|$COLUMN_FNS|table|vite|asset|url|as|use|noop)\s*\(\s*(?<q>['"])(?<pre>[^'"]*)\z""",
         RegexOption.IGNORE_CASE,
     )
 
@@ -236,22 +236,19 @@ object CallSiteDetector {
             return Site(SymbolKind.COMPONENT, it.groups["pre"]?.value ?: "")
         }
         AT_DIRECTIVE.find(tail)?.let {
-            if (!tail.contains("(") || tail.lastIndexOf('@') > tail.lastIndexOf('(')) {
-                return Site(SymbolKind.DIRECTIVE, it.groups["pre"]?.value ?: "")
-            }
+            // `\z` already requires the `@dir` to be at EOF, so a later `(` cannot exist.
+            return Site(SymbolKind.DIRECTIVE, it.groups["pre"]?.value ?: "")
         }
         DIRECTIVE_VIEW.find(tail)?.let { m ->
             val name = m.groups["dir"]?.value ?: ""
             val kind = when (name) {
-                "include", "includeIf", "includeWhen", "includeUnless",
-                "each", "extends", "layout", "section",
-                -> SymbolKind.VIEW
                 "component" -> SymbolKind.COMPONENT
                 "wire" -> SymbolKind.WIRE
                 "lang", "choice" -> SymbolKind.TRANSLATION
                 "can", "cannot", "canany", "cannotany" -> SymbolKind.GATE
                 "route", "signedRoute" -> SymbolKind.ROUTE
                 "svg", "vite", "asset" -> SymbolKind.VITE
+                // include*/each/extends/layout/section and any future view dirs
                 else -> SymbolKind.VIEW
             }
             return Site(kind, m.groups["pre"]?.value ?: "")
