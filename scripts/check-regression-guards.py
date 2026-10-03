@@ -110,6 +110,17 @@ def check_form_contracts() -> None:
             "REGRESSION(@form): directiveCompletions must seed snippetNames() "
             "so form appears without a warm index"
         )
+    if "wireEnabled" not in catalog:
+        err(
+            "REGRESSION(wire): directiveCompletions must gate wire/persist on "
+            "index.wireEnabled"
+        )
+    index_kt = read("src/main/kotlin/dev/shamar/adonis/ide/AdonisIndex.kt")
+    if "wireEnabled" not in index_kt or "val wire:" not in index_kt:
+        err("REGRESSION(wire): FrameworkEntry.wire / wireEnabled missing")
+    indexer = read("indexer/index.mjs")
+    if "detectWire" not in indexer or "wire," not in indexer:
+        err("REGRESSION(wire): indexer must emit framework.wire via detectWire")
     typed = read("src/main/kotlin/dev/shamar/adonis/ide/EdgeTypedHandler.kt")
     if "scheduleAutoPopup" not in typed:
         err("REGRESSION(@popup): EdgeTypedHandler must scheduleAutoPopup")

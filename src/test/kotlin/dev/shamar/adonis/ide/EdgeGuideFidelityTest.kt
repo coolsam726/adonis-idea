@@ -135,6 +135,9 @@ class EdgeGuideFidelityTest : BasePlatformTestCase() {
         assertTrue(cold.any { it.first == "form" })
         assertTrue(cold.any { it.first == "!button" })
         assertTrue(cold.any { it.first == "dump" })
+        // Wire is detection-gated — absent without framework.wire / wire components.
+        assertFalse(cold.any { it.first == "wire" })
+        assertFalse(cold.any { it.first == "persist" })
 
         val index = AdonisIndex(
             ok = true,
@@ -146,6 +149,31 @@ class EdgeGuideFidelityTest : BasePlatformTestCase() {
         assertTrue(items.any { it.first == "field.root" })
         assertTrue(items.any { it.first == "includeIf" })
         assertFalse(items.any { it.first == "endif" })
+        assertFalse(items.any { it.first == "wire" })
+    }
+
+    fun `test wire directives gated on detection`() {
+        val off = AdonisCompletionCatalog.directiveCompletions(
+            AdonisIndex(ok = true, framework = AdonisIndex.FrameworkEntry(wire = false)),
+        )
+        assertFalse(off.any { it.first == "wire" || it.first == "persist" })
+
+        val onFlag = AdonisCompletionCatalog.directiveCompletions(
+            AdonisIndex(ok = true, framework = AdonisIndex.FrameworkEntry(wire = true)),
+        )
+        assertTrue(onFlag.any { it.first == "wire" })
+        assertTrue(onFlag.any { it.first == "persist" })
+
+        val onComponents = AdonisCompletionCatalog.directiveCompletions(
+            AdonisIndex(
+                ok = true,
+                wireComponents = mapOf("counter" to AdonisIndex.WireEntry(path = "/tmp/c.ts")),
+            ),
+        )
+        assertTrue(onComponents.any { it.first == "wire" })
+        assertTrue(onComponents.any { it.first == "persist" })
+        assertTrue(AdonisIndex(framework = AdonisIndex.FrameworkEntry(wire = true)).wireEnabled)
+        assertFalse(AdonisIndex.empty().wireEnabled)
     }
 
     fun `test dark theme icons are well formed svg`() {
