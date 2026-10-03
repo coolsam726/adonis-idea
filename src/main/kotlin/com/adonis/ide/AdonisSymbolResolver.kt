@@ -54,8 +54,68 @@ object AdonisSymbolResolver {
             }
             SymbolKind.RELATION -> resolveRelation(index, name, receiver)
             SymbolKind.TEMPLATE_VAR -> resolveTemplateVar(index, name, viewName)
+            SymbolKind.CONTROLLER_ACTION -> resolveControllerAction(index, name, receiver)
             else -> null
         }
+    }
+
+    /**
+     * Resolve ``[controllers.Session, 'store']`` to SessionController#store only.
+     * Requires a controller receiver when multiple controllers share the action name.
+     */
+    fun resolveControllerAction(
+        index: AdonisIndex,
+        action: String,
+        receiver: String?,
+    ): Target? {
+        if (action.isBlank()) return null
+        // Allow fully-qualified ``SessionController@store`` as the name.
+        val (controllerHint, actionName) = if ('@' in action) {
+            action.substringBefore('@') to action.substringAfter('@')
+        } else {
+            receiver to action
+        }
+        if (actionName.isBlank()) return null
+
+        val controller = index.resolveControllerName(controllerHint)
+            ?: uniqueControllerForAction(index, actionName)
+            ?: return null
+
+        if (index.controllerActions[controller]?.contains(actionName) != true &&
+            !index.controllerLocations.containsKey("$controller@$actionName")
+        ) {
+            return null
+        }
+
+        index.controllerLocations["$controller@$actionName"]?.let { loc ->
+            val path = loc.path ?: return@let
+            return Target(path, loc.line.coerceAtLeast(0))
+        }
+        val classLoc = index.controllerLocations[controller]
+        val path = classLoc?.path ?: return null
+        val line = locateMethodLine(path, actionName)
+        return Target(path, line)
+    }
+
+    private fun uniqueControllerForAction(index: AdonisIndex, action: String): String? {
+        val matches = index.controllerActions.entries.filter { action in it.value }.map { it.key }
+        return matches.singleOrNull()
+    }
+
+    /** Scan a controller source file for an indented method declaration (0-based line). */
+    internal fun locateMethodLine(path: String, method: String): Int {
+        val file = Path.of(path)
+        if (!Files.isRegularFile(file)) return 0
+        val lines = try {
+            Files.readAllLines(file)
+        } catch (_: Exception) {
+            return 0
+        }
+        val pattern = Regex("""^\s+(?:async\s+)?${Regex.escape(method)}\s*\(""")
+        for (i in lines.indices) {
+            if (pattern.containsMatchIn(lines[i])) return i
+        }
+        return 0
     }
 
     fun resolveColumn(index: AdonisIndex, tableHint: String?, column: String): Target? {

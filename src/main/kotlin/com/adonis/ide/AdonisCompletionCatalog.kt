@@ -56,8 +56,15 @@ object AdonisCompletionCatalog {
                 names.map { it to "directive" }
             }
             SymbolKind.TEMPLATE_VAR -> index.templateVarNames().map { it to "var" }
-            SymbolKind.CONTROLLER_ACTION ->
-                index.controllerActions.values.flatten().distinct().map { it to "action" }
+            SymbolKind.CONTROLLER_ACTION -> {
+                val controller = index.resolveControllerName(site.receiver)
+                val actions = if (controller != null) {
+                    index.controllerActions[controller].orEmpty()
+                } else {
+                    index.controllerActions.values.flatten().distinct()
+                }
+                actions.map { it to "action" }
+            }
             SymbolKind.WIRE -> index.wireComponents.map { (n, w) ->
                 n to (w.path?.substringAfterLast('/') ?: "wire")
             }

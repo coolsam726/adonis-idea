@@ -27,11 +27,12 @@ class AdonisCompletionContributor : CompletionContributor() {
                 ) {
                     val file = parameters.originalFile.virtualFile ?: return
                     val name = file.name
+                    if (!AdonisNavigation.isSupportedFile(name, parameters.originalFile.language)) {
+                        return
+                    }
                     val isEdge = name.endsWith(".edge") ||
                         parameters.originalFile.language === EdgeLanguage
-                    val isPython = name.endsWith(".py")
                     val isEnv = name == ".env" || name.startsWith(".env.")
-                    if (!isEdge && !isPython && !isEnv) return
 
                     val project = parameters.position.project
                     val index = AdonisProjectService.getInstance(project).index()

@@ -85,13 +85,21 @@ class AdonisReferenceProvider : PsiReferenceProvider() {
         val relEnd = (hit.range.endOffset - elementStart).coerceAtMost(element.textLength)
         if (relStart >= relEnd) return PsiReference.EMPTY_ARRAY
 
+        val symbolName = when (hit.kind) {
+            SymbolKind.CONTROLLER_ACTION -> {
+                val controller = index.resolveControllerName(hit.receiver)
+                if (controller != null) "$controller@${hit.name}" else hit.name
+            }
+            else -> hit.name
+        }
+
         return arrayOf(
             AdonisSymbolReference(
                 element,
                 TextRange(relStart, relEnd),
                 target,
                 hit.kind,
-                hit.name,
+                symbolName,
             ),
         )
     }

@@ -233,7 +233,9 @@ class AdonisCoverageExhaustTest {
         assertEquals(SymbolKind.ROUTE, CallSiteDetector.detect("""@route("hom""")!!.kind)
         assertEquals(SymbolKind.TRANSLATION, CallSiteDetector.detect("""@lang('msg""")!!.kind)
         assertEquals(SymbolKind.CAST, CallSiteDetector.detect("""casts = {"x": "dat""")!!.kind)
-        assertEquals(SymbolKind.CONTROLLER_ACTION, CallSiteDetector.detect("""[WelcomeController, "ind""")!!.kind)
+        val ctrlSite = CallSiteDetector.detect("""[WelcomeController, "ind""")!!
+        assertEquals(SymbolKind.CONTROLLER_ACTION, ctrlSite.kind)
+        assertEquals("WelcomeController", ctrlSite.receiver)
         assertEquals(SymbolKind.ACE, CallSiteDetector.detect("""ace("ser""")!!.kind)
         assertEquals(SymbolKind.VITE, CallSiteDetector.detect("""vite("resources""")!!.kind)
         assertEquals(SymbolKind.INERTIA, CallSiteDetector.detect("""render("Dash""")!!.kind)
