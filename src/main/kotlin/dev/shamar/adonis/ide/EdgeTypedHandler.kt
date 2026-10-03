@@ -1,15 +1,15 @@
 package dev.shamar.adonis.ide
 
+import com.intellij.codeInsight.AutoPopupController
 import com.intellij.codeInsight.editorActions.TypedHandlerDelegate
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
 
 /**
- * `{{` closes itself as `{{  }}` with the caret in the middle, like Blade.
- *
- * Also stops the completion auto-popup while the braces are being typed —
- * suggestions belong to Ctrl+Space or the first typed letter, not to `{`.
+ * Edge typing aids:
+ * - `{{` closes as `{{  }}` with the caret in the middle
+ * - Typing `@` immediately opens directive completion
  */
 class EdgeTypedHandler : TypedHandlerDelegate() {
     override fun charTyped(
@@ -18,6 +18,10 @@ class EdgeTypedHandler : TypedHandlerDelegate() {
         editor: Editor,
         file: PsiFile,
     ): Result {
+        if (c == '@' && isEdge(file)) {
+            AutoPopupController.getInstance(project).scheduleAutoPopup(editor)
+            return Result.CONTINUE
+        }
         if (c != '{' || !isEdge(file)) return Result.CONTINUE
         val document = editor.document
         val caret = editor.caretModel.offset
@@ -49,7 +53,13 @@ class EdgeTypedHandler : TypedHandlerDelegate() {
         editor: Editor,
         file: PsiFile,
     ): Result {
-        if (isEdge(file) && (c == '{' || c == '}')) return Result.STOP
+        if (!isEdge(file)) return Result.CONTINUE
+        if (c == '{' || c == '}') return Result.STOP
+        if (c == '@') {
+            // `@` is not an identifier start — force the completion popup.
+            AutoPopupController.getInstance(project).scheduleAutoPopup(editor)
+            return Result.STOP
+        }
         return Result.CONTINUE
     }
 

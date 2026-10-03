@@ -12,7 +12,10 @@ import com.intellij.patterns.PlatformPatterns
 import com.intellij.util.ProcessingContext
 
 /**
- * Native Adonis completions for Python and Edge, driven by [AdonisIndex].
+ * Native Adonis / Edge completions driven by [AdonisIndex].
+ *
+ * Edge `@` directives always complete (even before the index is warm) and
+ * expand to structured snippets with argument placeholders + `@end` where needed.
  */
 class AdonisCompletionContributor : CompletionContributor() {
     init {
@@ -36,15 +39,31 @@ class AdonisCompletionContributor : CompletionContributor() {
 
                     val project = parameters.position.project
                     val index = AdonisProjectService.getInstance(project).index()
-                    if (!index.ok && index.views.isEmpty() && index.routes.isEmpty()) return
 
                     val document = parameters.editor.document
                     val offset = parameters.offset
                     val before = document.text.substring(0, offset.coerceAtMost(document.textLength))
-                    val site = CallSiteDetector.detect(before, dotenvFile = isEnv) ?: run {
+                    val site = CallSiteDetector.detect(before, dotenvFile = isEnv)
+
+                    // Edge `@` / `@ea` — always offer directives (index optional).
+                    if (site?.kind == SymbolKind.DIRECTIVE) {
+                        addDirectiveCompletions(result, index, site.prefix)
+                        return
+                    }
+
+                    if (!index.ok && index.views.isEmpty() && index.routes.isEmpty()) {
+                        return
+                    }
+
+                    if (site == null) {
                         if (isEdge && before.trimEnd().endsWith("@").not()) {
                             val prefix = result.prefixMatcher.prefix
-                            addAll(result, index.directives, "directive", prefix)
+                            addAll(
+                                result,
+                                index.directives.ifEmpty { EdgeDirectives.NAMES },
+                                "directive",
+                                prefix,
+                            )
                             addAll(result, index.templateVarNames(), "helper", prefix)
                         }
                         return
@@ -56,18 +75,11 @@ class AdonisCompletionContributor : CompletionContributor() {
                         if (!label.startsWith(site.prefix) && site.prefix.isNotEmpty()) {
                             if (!label.contains(site.prefix, ignoreCase = true)) continue
                         }
-                        val insert = when (site.kind) {
-                            SymbolKind.DIRECTIVE -> EdgeDirectives.ALIASES[label] ?: label
-                            else -> label
-                        }
-                        var element = LookupElementBuilder.create(insert)
-                            .withTypeText(detail, true)
-                            .withPresentableText(if (insert != label) insert else label)
-                            .withLookupString(label)
-                        if (insert != label) {
-                            element = element.withLookupString(insert)
-                        }
-                        prefixed.addElement(element)
+                        prefixed.addElement(
+                            LookupElementBuilder.create(label)
+                                .withTypeText(detail, true)
+                                .withPresentableText(label),
+                        )
                     }
 
                     if (isEnv && site.kind == SymbolKind.ENV) {
@@ -81,6 +93,76 @@ class AdonisCompletionContributor : CompletionContributor() {
     companion object {
         fun symbolsFor(index: AdonisIndex, site: CallSiteDetector.Site): List<Pair<String, String>> =
             AdonisCompletionCatalog.symbolsFor(index, site)
+
+        data class DirectiveLookup(
+            val label: String,
+            val insertName: String,
+            val presentable: String,
+            val detail: String,
+            val hasSnippet: Boolean,
+            val bold: Boolean,
+        )
+
+        /**
+         * Pure catalog for Edge `@` completions — used by the contributor and tests.
+         * Empty [prefix] lists every directive.
+         */
+        fun directiveLookups(index: AdonisIndex, prefix: String): List<DirectiveLookup> {
+            val items = AdonisCompletionCatalog.directiveCompletions(index)
+            val out = ArrayList<DirectiveLookup>(items.size)
+            for ((label, detail) in items) {
+                if (prefix.isNotEmpty() &&
+                    !label.startsWith(prefix) &&
+                    !label.contains(prefix, ignoreCase = true)
+                ) {
+                    continue
+                }
+                val insertName = EdgeDirectives.ALIASES[label] ?: label
+                val snippet = EdgeDirectiveSnippets.specFor(insertName)
+                    ?: EdgeDirectiveSnippets.specFor(label)
+                val presentable = snippet?.presentable ?: insertName
+                val typeText = snippet?.detail ?: detail
+                out.add(
+                    DirectiveLookup(
+                        label = label,
+                        insertName = insertName,
+                        presentable = presentable,
+                        detail = typeText,
+                        hasSnippet = snippet != null,
+                        bold = prefix.isEmpty() && snippet != null && presentable.contains("@end"),
+                    ),
+                )
+            }
+            return out
+        }
+
+        fun addDirectiveCompletions(
+            result: CompletionResultSet,
+            index: AdonisIndex,
+            prefix: String,
+        ) {
+            // Empty prefix after `@` must list everything — do not inherit a sticky matcher.
+            val prefixed = result.withPrefixMatcher(prefix)
+            for (item in directiveLookups(index, prefix)) {
+                var element = LookupElementBuilder.create(item.insertName)
+                    .withPresentableText(item.presentable)
+                    .withTypeText(item.detail, true)
+                    .withLookupString(item.label)
+                    .withLookupString(item.insertName)
+                if (item.hasSnippet) {
+                    element = element.withInsertHandler(directiveSnippetHandler(item.insertName))
+                }
+                if (item.bold) {
+                    element = element.bold()
+                }
+                prefixed.addElement(element)
+            }
+        }
+
+        private fun directiveSnippetHandler(directiveName: String): InsertHandler<LookupElement> =
+            InsertHandler { context, _ ->
+                EdgeDirectiveSnippets.applyLookup(context, directiveName)
+            }
 
         private fun addEnvBulkInsert(
             result: CompletionResultSet,

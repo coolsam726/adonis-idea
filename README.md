@@ -94,6 +94,19 @@ Also works for `route()`, `router.*.as('…')`, and Shamar convention names when
 
 <img src="docs/media/edge-templates.gif" alt="Native Edge highlighting" width="880" />
 
+### Complete Edge `@` directives
+
+In any `*.edge` file, type `@` — the IDE opens the full directive list immediately (no Ctrl-Space required). Pick a directive to insert a structured snippet:
+
+| You pick | You get |
+| --- | --- |
+| `each` (aliases: `for` / `loop` / `foreach`) | `@each(item in items)` … `@end` with tab-stops on the args |
+| `if` / `unless` / `component` / `slot` / `layout` / `page` / `wire` | Matching opener args + closing `@end` |
+| `include` / `svg` / `vite` / `let` | One-line helpers with argument placeholders |
+| `!component` | Self-closing `@!component('name')` |
+
+<img src="docs/media/edge-directives.gif" alt="Typing @ lists Edge directives; each expands with args and @end" width="880" />
+
 ### Generate files with Ace
 
 Use **Adonis → New…** (also on the IDE **New** menu) for `make:controller`, `make:model`, migrations, validators, Wire components, and more.
@@ -129,8 +142,9 @@ Or run Ace from a run configuration: **Run → Edit Configurations → + → Ace
 
 - Native file type with HTML colors under Edge overlays  
 - Dual PSI roots so HTML inspections keep working  
-- `@if` / `@each` / `@component` / `@wire` / `@persist` / `@end`  
-- Structure diagnostics for mismatched blocks  
+- Typing `@` auto-opens the full directive catalog  
+- Structured snippets: args + `@end` for blocks (`@each`, `@if`, `@component`, …)  
+- Structure diagnostics for mismatched blocks / dotted tags (`@layouts.app`, `@page`)  
 
 </details>
 

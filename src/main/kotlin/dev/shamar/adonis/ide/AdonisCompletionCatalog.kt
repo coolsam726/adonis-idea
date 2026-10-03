@@ -133,14 +133,11 @@ object AdonisCompletionCatalog {
      */
     fun directiveCompletions(index: AdonisIndex): List<Pair<String, String>> {
         val names = (index.directives + EdgeDirectives.NAMES).toMutableSet()
-        // Drop bang-prefixed indexer leftovers (`!component`).
+        // Drop bang-prefixed indexer leftovers; we re-add the known bang form below.
         names.removeAll { it.startsWith("!") }
         val out = linkedMapOf<String, String>()
         for (name in names.sorted()) {
-            val detail = when (name) {
-                "each" -> "loop"
-                "page", "slot", "section" -> "slot"
-                "layout", "component" -> "component"
+            val detail = EdgeDirectiveSnippets.specFor(name)?.detail ?: when (name) {
                 "end", "endif", "endeach", "endcomponent", "endslot",
                 "endsection", "endlayout", "endwire", "endpersist",
                 -> "close"
@@ -148,6 +145,8 @@ object AdonisCompletionCatalog {
             }
             out[name] = detail
         }
+        // Self-closing bang component (typed as `@!component` or picked from `@`).
+        out.putIfAbsent("!component", "component")
         for ((alias, real) in EdgeDirectives.ALIASES) {
             if (real in names) {
                 out.putIfAbsent(alias, "→ @$real")
