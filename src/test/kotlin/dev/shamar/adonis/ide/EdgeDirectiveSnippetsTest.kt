@@ -172,15 +172,20 @@ class EdgeDirectiveSnippetsTest : BasePlatformTestCase() {
 
     fun `test remaining snippets expand`() {
         for (name in listOf(
-            "unless", "component", "slot", "section", "layout",
+            "unless", "component", "slot", "section", "layout", "form",
             "wire", "persist", "pushTo", "svg", "vite", "let", "assign", "elseif",
+            "dump", "includeIf", "inject", "eval", "each.index",
         )) {
-            myFixture.configureByText("$name.edge", "@")
+            myFixture.configureByText("${name.replace('.', '_')}.edge", "@")
             WriteCommandAction.runWriteCommandAction(project) {
                 EdgeDirectiveSnippets.applyLookup(myFixture.editor, 1, 1, name)
             }
             val text = myFixture.editor.document.text
-            assertTrue("$name should expand", text.contains(name.removePrefix("!")))
+            val needle = when (name) {
+                "each.index" -> "each(("
+                else -> name.removePrefix("!").substringBefore('.')
+            }
+            assertTrue("$name should expand, got: $text", text.contains(needle))
         }
     }
 

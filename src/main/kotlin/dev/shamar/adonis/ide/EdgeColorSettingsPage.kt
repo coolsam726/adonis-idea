@@ -29,6 +29,7 @@ class EdgeColorSettingsPage : ColorSettingsPage {
         mutableMapOf(
             "dir" to EdgeColors.DIRECTIVE,
             "echo" to EdgeColors.ECHO,
+            "raw" to EdgeColors.RAW_ECHO,
             "comment" to EdgeColors.COMMENT,
         )
 
@@ -36,15 +37,17 @@ class EdgeColorSettingsPage : ColorSettingsPage {
         private val DESCRIPTORS = arrayOf(
             AttributesDescriptor("Directive", EdgeColors.DIRECTIVE),
             AttributesDescriptor("Echo", EdgeColors.ECHO),
+            AttributesDescriptor("Raw echo", EdgeColors.RAW_ECHO),
             AttributesDescriptor("Comment", EdgeColors.COMMENT),
         )
 
         private val DEMO: String =
-            "<dir>@layouts.app</dir>({ title: 'Dashboard' })\n" +
-                "  <dir>@page</dir>()\n" +
+            "<dir>@layouts.app({ title: 'Dashboard' })</dir>\n" +
+                "  <dir>@page()</dir>\n" +
                 "    <comment>{{-- Welcome banner --}}</comment>\n" +
                 "    <h1><echo>{{ user.name }}</echo></h1>\n" +
-                "    <dir>@each</dir>(item in items)\n" +
+                "    <p><raw>{{{ excerpt(post.content, 280) }}}</raw></p>\n" +
+                "    <dir>@each(item in items)</dir>\n" +
                 "      <li><echo>{{ item }}</echo></li>\n" +
                 "    <dir>@end</dir>\n" +
                 "  <dir>@end</dir>\n" +

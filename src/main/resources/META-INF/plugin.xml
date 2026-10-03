@@ -44,7 +44,8 @@
         fieldName="INSTANCE"
         language="Edge"
         extensions="edge"
-        patterns="*.edge"/>
+        patterns="*.edge"
+        icon="/icons/adonis.svg"/>
 
     <fileTypeOverrider implementation="dev.shamar.adonis.ide.EdgeFileTypeOverrider"/>
     <fileTypeDetector implementation="dev.shamar.adonis.ide.EdgeFileTypeDetector" order="first"/>

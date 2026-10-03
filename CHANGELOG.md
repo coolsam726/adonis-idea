@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- EdgeJS guide fidelity: lex/complete arbitrary `@form` / `@!button` tag components
+- Object-literal prop sites: `route` → routes, `method` → HTTP verbs, starter-kit prop keys
+- `@includeIf` / `When` / `Unless` 2nd-arg view paths; `router.on().render` → views
+- Escape `@{{ … }}`, trailing `~` on directives, `@dump`, seeded `$slots` / `$context` / helpers
+- Raw `{!! … !!}` echo coloring; Adonis brand icon on `*.edge` files (incl. dark variant)
+- GTD / Find Usages for Edge tag names and `route:` prop values
+
 ## 0.2.0
 
 - Plugin id renamed to `dev.shamar.adonis.ide` (Kotlin package / Gradle group aligned)

@@ -81,30 +81,45 @@ object AdonisSymbolLocator {
         }
         if (offset > close) return null
 
-        // Identifier under caret: [A-Za-z_][\w]* possibly starting a dotted chain.
+        // Identifier under caret: `$slots` / `name` / dotted chain root.
         var start = offset
-        while (start > openEcho + 2 && (text[start - 1].isLetterOrDigit() || text[start - 1] == '_')) {
+        while (start > openEcho + 2 &&
+            (text[start - 1].isLetterOrDigit() || text[start - 1] == '_')
+        ) {
             start--
         }
         var end = offset
         while (end < text.length && end < close && (text[end].isLetterOrDigit() || text[end] == '_')) {
             end++
         }
+        // Leading `$` for `$slots` / `$context` (kept out of the walk-back so both branches run).
+        if (start > openEcho + 2 && text[start - 1] == '$') {
+            start--
+        } else if (start < text.length && text[start] == '$') {
+            end = (start + 1).coerceAtMost(close.coerceAtMost(text.length))
+            while (end < text.length && end < close && (text[end].isLetterOrDigit() || text[end] == '_')) {
+                end++
+            }
+        }
         if (start >= end) return null
         // Skip if caret is on a dotted attribute (foo.bar → only resolve when on foo),
         // but still allow navigation from the root when offset is on root or we take root.
         val tokenStart = run {
             var s = start
-            // If we're on `.attr`, walk back to root
+            // If we're on `.attr`, walk back to the root identifier (and optional `$`).
             if (s > openEcho + 2 && text.getOrNull(s - 1) == '.') {
                 s--
-                while (s > openEcho + 2 && (text[s - 1].isLetterOrDigit() || text[s - 1] == '_')) s--
+                while (s > openEcho + 2 && (text[s - 1].isLetterOrDigit() || text[s - 1] == '_')) {
+                    s--
+                }
+                if (s > openEcho + 2 && text[s - 1] == '$') s--
             }
-            // Expand left fully for root
-            while (s > openEcho + 2 && (text[s - 1].isLetterOrDigit() || text[s - 1] == '_')) s--
             s
         }
         var tokenEnd = tokenStart
+        if (tokenEnd < text.length && tokenEnd < close && text[tokenEnd] == '$') {
+            tokenEnd++
+        }
         while (tokenEnd < text.length && tokenEnd < close &&
             (text[tokenEnd].isLetterOrDigit() || text[tokenEnd] == '_')
         ) {
@@ -115,7 +130,7 @@ object AdonisSymbolLocator {
         val between = text.substring(openEcho, tokenStart)
         if (between.contains('|')) return null
         val name = text.substring(tokenStart, tokenEnd)
-        if (name.isEmpty() || name[0].isDigit()) return null
+        if (name.isEmpty() || (name[0] != '$' && name[0].isDigit())) return null
         // Confirm CallSiteDetector agrees when probing at end of name
         val probe = text.substring(0, tokenEnd)
         val site = CallSiteDetector.detect(probe)

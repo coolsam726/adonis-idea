@@ -619,12 +619,24 @@ function indexAceCommands(base) {
 }
 
 const EDGE_DIRECTIVES = [
-  'if', 'elseif', 'else', 'unless', 'each', 'component', 'slot', 'include',
+  'if', 'elseif', 'else', 'unless', 'each', 'component', 'slot',
+  'include', 'includeIf', 'includeWhen', 'includeUnless',
   'inject', 'eval', 'let', 'assign', 'vite', 'stack', 'pushTo', 'svg',
-  'debugger', 'newError', 'section', 'layout', 'page',
+  'debugger', 'newError', 'dump', 'section', 'layout', 'page',
   // Shamar / Wire tags (always known to lexer; completions gated elsewhere)
   'wire', 'persist', 'end',
 ]
+
+/** Globals Adonis / Edge share with every template (seeded; not scanned). */
+const EDGE_VIEW_HELPERS = Object.fromEntries(
+  [
+    'excerpt', 'truncate', 'nl2br', 'inspect',
+    'html', 'route', 'signedRoute', 'auth', 'request',
+    'camelCase', 'snakeCase', 'dashCase', 'pascalCase', 'capitalCase',
+    'sentenceCase', 'dotCase', 'noCase', 'titleCase',
+    '$slots', '$context', '$caller', 'props', 'state',
+  ].map((name) => [name, { kind: 'helper' }]),
+)
 
 function build() {
   if (!isAdonisApp(root)) {
@@ -711,8 +723,11 @@ function build() {
     ace_commands: indexAceCommands(root),
     validation_rules: ['required', 'email', 'minLength', 'maxLength', 'unique', 'confirmed', 'trim', 'optional'],
     directives: EDGE_DIRECTIVES,
-    view_helpers: [],
-    view_shared: {},
+    view_helpers: EDGE_VIEW_HELPERS,
+    view_shared: {
+      auth: { kind: 'shared' },
+      request: { kind: 'shared' },
+    },
     view_data: {},
     vite_entries: indexVite(root),
     controller_actions: controllers.actions,

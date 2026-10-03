@@ -2,8 +2,8 @@ package dev.shamar.adonis.ide
 
 import com.intellij.openapi.fileTypes.LanguageFileType
 import com.intellij.openapi.fileTypes.ex.FileTypeIdentifiableByVirtualFile
-import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.VirtualFile
+import icons.AdonisIcons
 import javax.swing.Icon
 
 /**
@@ -22,8 +22,7 @@ class EdgeFileType private constructor() :
 
     override fun getDefaultExtension(): String = "edge"
 
-    override fun getIcon(): Icon =
-        IconLoader.getIcon("/icons/edge.svg", EdgeFileType::class.java)
+    override fun getIcon(): Icon = AdonisIcons.File
 
     override fun isMyFileType(file: VirtualFile): Boolean =
         !file.isDirectory && isEdgeFileName(file.name)

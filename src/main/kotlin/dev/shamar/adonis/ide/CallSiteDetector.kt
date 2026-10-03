@@ -63,9 +63,25 @@ object CallSiteDetector {
         """@!?(?<dir>include|includeIf|includeWhen|includeUnless|each|component|wire|layout|section|svg|vite|extends|lang|choice|can|cannot|canany|cannotany|route|signedRoute|asset)\s*\(\s*(?:\[\s*)?(?<q>['"])(?<pre>[^'"]*)\z""",
     )
 
+    /** `@includeIf(cond, 'partial` — path is the 2nd argument. */
+    private val INCLUDE_IF_VIEW = Regex(
+        """@!?(?<dir>includeIf|includeWhen|includeUnless)\s*\(\s*(?:[^'"(),]|(['"]).*?\1|\([^)]*\))*,\s*(?<q>['"])(?<pre>[^'"]*)\z""",
+    )
+
     /** `@`, `@ea`, `@each`, `@layouts.app` (prefix may be empty or dotted). */
     private val AT_DIRECTIVE = Regex(
         """@!?(?<pre>[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*)?\z""",
+    )
+
+    /** Inside `@tag({ … prop: 'pre` — value completion. */
+    private val EDGE_TAG_PROP_VALUE = Regex(
+        """@!?(?<tag>[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*)\s*\(\s*\{[\s\S]*?\b(?<prop>route|signedRoute|method|variant)\s*:\s*(?<q>['"])(?<pre>[^'"]*)\z""",
+        setOf(RegexOption.IGNORE_CASE),
+    )
+
+    /** Inside `@tag({ ` or after a comma — prop-key completion. */
+    private val EDGE_TAG_PROP_KEY = Regex(
+        """@!?(?<tag>[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*)\s*\(\s*\{(?:[^{}]|\{[^{}]*\})*(?:,\s*)?(?<pre>[A-Za-z_][\w]*)?\z""",
     )
 
     private val COMPONENT_TAG = Regex("""<x-(?<pre>[\w./-]*)\z""")
@@ -187,10 +203,14 @@ object CallSiteDetector {
         }
     }
 
-    private fun kindForCall(fn: String, receiver: String?): SymbolKind? {
+    private fun kindForCall(fn: String, receiver: String?, before: String): SymbolKind? {
         val name = fn.lowercase()
         // Adonis: view.render('pages/auth/signup') / ctx.view.renderSync('…')
         if ((name == "render" || name == "rendersync") && isViewReceiver(receiver)) {
+            return SymbolKind.VIEW
+        }
+        // router.on('/').render('pages/home') — chained render of an Edge view.
+        if (name == "render" && isRouterOnRender(before)) {
             return SymbolKind.VIEW
         }
         return when (name) {
@@ -216,6 +236,14 @@ object CallSiteDetector {
         if (receiver.isNullOrBlank()) return false
         val leaf = receiver.substringAfterLast('.').lowercase()
         return leaf == "view"
+    }
+
+    /** `router.on(…).render(` / `.on('/path').render(` → Edge view path. */
+    private fun isRouterOnRender(before: String): Boolean {
+        val head = before.substringBeforeLast(".render", missingDelimiterValue = "")
+        if (head.isEmpty()) return false
+        return Regex("""\b(?:router\.)?on\s*\([^)]*\)\s*$""", RegexOption.IGNORE_CASE)
+            .containsMatchIn(head.takeLast(80))
     }
 
     /**
@@ -257,6 +285,23 @@ object CallSiteDetector {
         }
         COMPONENT_TAG.find(tail)?.let {
             return Site(SymbolKind.COMPONENT, it.groups["pre"]?.value ?: "")
+        }
+        EDGE_TAG_PROP_VALUE.find(tail)?.let { m ->
+            val prop = m.groups["prop"]?.value?.lowercase() ?: return@let
+            val pre = m.groups["pre"]?.value ?: ""
+            val kind = EdgeTagRegistry.propValueKind(prop) ?: return@let
+            return Site(kind, pre, receiver = prop)
+        }
+        EDGE_TAG_PROP_KEY.find(tail)?.let { m ->
+            // Avoid stealing `@form` bare directive completion (no `{` yet — regex requires `{`).
+            val tag = m.groups["tag"]?.value ?: return@let
+            val pre = m.groups["pre"]?.value ?: ""
+            // If still inside a string value, skip (prop-value regex should have won).
+            if (tail.lastOrNull() == '\'' || tail.lastOrNull() == '"') return@let
+            return Site(SymbolKind.EDGE_PROP_KEY, pre, receiver = tag)
+        }
+        INCLUDE_IF_VIEW.find(tail)?.let {
+            return Site(SymbolKind.VIEW, it.groups["pre"]?.value ?: "")
         }
         AT_DIRECTIVE.find(tail)?.let {
             // `\z` already requires the `@dir` to be at EOF, so a later `(` cannot exist.
@@ -337,7 +382,7 @@ object CallSiteDetector {
         MODEL_QUERY_CHAIN.find(tail)?.let { m ->
             val fn = m.named("fn")?.lowercase() ?: return@let
             val recv = m.named("recv")
-            val kind = kindForCall(fn, recv) ?: return@let
+            val kind = kindForCall(fn, recv, tail) ?: return@let
             return Site(kind, m.named("pre") ?: "", receiver = recv)
         }
         CALL_MATCHERS.forEach { regex ->
@@ -345,7 +390,7 @@ object CallSiteDetector {
                 val fn = m.named("fn")?.lowercase() ?: return@let
                 val pre = m.named("pre") ?: ""
                 var recv = m.named("recv")
-                val kind = kindForCall(fn, recv) ?: return@let
+                val kind = kindForCall(fn, recv, tail) ?: return@let
                 if (recv == null && (kind == SymbolKind.COLUMN || kind == SymbolKind.RELATION)) {
                     recv = AdonisModelResolver.inferChainHead(tail)
                 }
@@ -365,8 +410,8 @@ object CallSiteDetector {
                 return Site(SymbolKind.ATTR, pre, receiver = recv)
             }
         }
-        // `{{ title` / `{{{ body` / `{!! html`
-        Regex("""(?:\{\{\{|\{\{|\{\!\!)\s*(?<pre>[A-Za-z_][\w.]*)?\z""").find(tail)?.let {
+        // `{{ title` / `{{{ body` / `{!! html` / `{{ $slots`
+        Regex("""(?:\{\{\{|\{\{|\{\!\!)\s*(?<pre>\$?[A-Za-z_][\w.]*)?\z""").find(tail)?.let {
             return Site(SymbolKind.TEMPLATE_VAR, it.groups["pre"]?.value ?: "")
         }
         return null

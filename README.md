@@ -90,7 +90,7 @@ Also works for `route()`, `router.*.as('…')`, and Shamar convention names when
 
 ### Edit Edge templates
 
-`*.edge` files get native highlighting, HTML dual-PSI (tags still complete), `@directive` awareness, and structure checks for unmatched `@if` / `@each` / `@end`.
+`*.edge` files use the Adonis brand icon, native highlighting (including `{!! … !!}` raw echo), HTML dual-PSI, and structure checks for unmatched `@if` / `@each` / `@end`. Tag components from the [EdgeJS guide](https://docs.adonisjs.com/guides/frontend/edgejs) — `@form({…})`, `@!button({…})`, `@layouts.app` — are lexed and foldable.
 
 <img src="docs/media/edge-templates.gif" alt="Native Edge highlighting" width="880" />
 
@@ -100,10 +100,13 @@ In any `*.edge` file, type `@` — the IDE opens the full directive list immedia
 
 | You pick | You get |
 | --- | --- |
-| `each` (aliases: `for` / `loop` / `foreach`) | `@each(item in items)` … `@end` with tab-stops on the args |
+| `each` (aliases: `for` / `loop` / `foreach`) | `@each(item in items)` … `@end` with tab-stops (optional `(index, item)` form) |
 | `if` / `unless` / `component` / `slot` / `layout` / `page` / `wire` | Matching opener args + closing `@end` |
+| `form` / `includeIf` / `dump` / `inject` / `eval` | Guide-aligned helpers (`@form({ route })`, 2nd-arg partials, …) |
 | `include` / `svg` / `vite` / `let` | One-line helpers with argument placeholders |
-| `!component` | Self-closing `@!component('name')` |
+| `!component` / `!button` | Self-closing `@!…` tag components |
+
+Inside object props, complete `route:` → named routes, `method:` → HTTP verbs, and starter-kit prop keys (`action`, `variant`, …). `router.on(…).render('…')` and `@includeIf(cond, '…')` complete as views.
 
 <img src="docs/media/edge-directives.gif" alt="Typing @ lists Edge directives; each expands with args and @end" width="880" />
 
@@ -125,13 +128,14 @@ Or run Ace from a run configuration: **Run → Edit Configurations → + → Ace
 | You type / click | Plugin helps with |
 | --- | --- |
 | `route('…')` / `.as('…')` | Named routes → declaration |
-| `view.render('…')` / `@include` | View & component paths |
+| `view.render('…')` / `router.on().render` / `@include` / `@includeIf` | View & component paths |
+| `@form({ route: '…' })` / `method:` | Named routes + HTTP verbs in tag props |
 | `config('…')` | Dotted config keys |
 | `.env` / `env.get('…')` | Keys, suggested values, bulk insert |
 | `[controllers.X, '…']` | Actions on **that** controller only |
 | `User.query().where('…')` | Columns / relations (Lucid or Mongoose) |
 | `@wire('…')` / `$wire.` | Wire components, props, methods |
-| `{{ var }}` in Edge | Shared / view data helpers |
+| `{{ var }}` / `$slots` / `$context` | Shared / view data / Edge globals |
 
 **Ctrl-hover** underlines navigable symbols. **Find Usages** and **Rename** work for indexed routes, views, config, and env keys.
 
@@ -140,10 +144,13 @@ Or run Ace from a run configuration: **Run → Edit Configurations → + → Ace
 <details>
 <summary><strong>Edge language</strong></summary>
 
-- Native file type with HTML colors under Edge overlays  
+- Native file type + Adonis icon; HTML colors under Edge overlays  
 - Dual PSI roots so HTML inspections keep working  
+- Arbitrary `@tag(` / `@!tag(` components lexed (not only a fixed name list)  
+- Object-literal prop autocomplete (`route`, `method`, starter-kit keys)  
 - Typing `@` auto-opens the full directive catalog  
-- Structured snippets: args + `@end` for blocks (`@each`, `@if`, `@component`, …)  
+- Structured snippets: args + `@end` for blocks (`@each`, `@if`, `@form`, …)  
+- Escape `@{{ … }}`, trailing `~`, `{!! raw !!}` coloring, seeded helpers  
 - Structure diagnostics for mismatched blocks / dotted tags (`@layouts.app`, `@page`)  
 
 </details>
