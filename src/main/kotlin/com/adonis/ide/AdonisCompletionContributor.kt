@@ -56,11 +56,18 @@ class AdonisCompletionContributor : CompletionContributor() {
                         if (!label.startsWith(site.prefix) && site.prefix.isNotEmpty()) {
                             if (!label.contains(site.prefix, ignoreCase = true)) continue
                         }
-                        prefixed.addElement(
-                            LookupElementBuilder.create(label)
-                                .withTypeText(detail, true)
-                                .withPresentableText(label),
-                        )
+                        val insert = when (site.kind) {
+                            SymbolKind.DIRECTIVE -> EdgeDirectives.ALIASES[label] ?: label
+                            else -> label
+                        }
+                        var element = LookupElementBuilder.create(insert)
+                            .withTypeText(detail, true)
+                            .withPresentableText(if (insert != label) insert else label)
+                            .withLookupString(label)
+                        if (insert != label) {
+                            element = element.withLookupString(insert)
+                        }
+                        prefixed.addElement(element)
                     }
 
                     if (isEnv && site.kind == SymbolKind.ENV) {

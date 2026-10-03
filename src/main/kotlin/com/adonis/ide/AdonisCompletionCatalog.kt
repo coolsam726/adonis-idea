@@ -50,11 +50,7 @@ object AdonisCompletionCatalog {
             SymbolKind.INERTIA -> index.inertiaPages.map { it to "inertia" }
             SymbolKind.ACE -> index.aceCommands.map { it to "ace" }
             SymbolKind.VITE -> (index.viteEntries.keys + index.views.keys).map { it to "asset" }
-            SymbolKind.DIRECTIVE -> {
-                val fromIndex = index.directives
-                val names = if (fromIndex.isNotEmpty()) fromIndex else EdgeDirectives.NAMES
-                names.map { it to "directive" }
-            }
+            SymbolKind.DIRECTIVE -> directiveCompletions(index)
             SymbolKind.TEMPLATE_VAR -> index.templateVarNames().map { it to "var" }
             SymbolKind.CONTROLLER_ACTION -> {
                 val controller = index.resolveControllerName(site.receiver)
@@ -128,6 +124,36 @@ object AdonisCompletionCatalog {
     ): String {
         val table = AdonisModelResolver.resolveTable(index, hint) ?: return "column"
         return "column · $table"
+    }
+
+    /**
+     * Edge `@` completions: always merge lexer-known names with the index, keep
+     * `@each` visible as the loop directive, and expose `for` / `loop` /
+     * `foreach` aliases that insert `each`.
+     */
+    fun directiveCompletions(index: AdonisIndex): List<Pair<String, String>> {
+        val names = (index.directives + EdgeDirectives.NAMES).toMutableSet()
+        // Drop bang-prefixed indexer leftovers (`!component`).
+        names.removeAll { it.startsWith("!") }
+        val out = linkedMapOf<String, String>()
+        for (name in names.sorted()) {
+            val detail = when (name) {
+                "each" -> "loop"
+                "page", "slot", "section" -> "slot"
+                "layout", "component" -> "component"
+                "end", "endif", "endeach", "endcomponent", "endslot",
+                "endsection", "endlayout", "endwire", "endpersist",
+                -> "close"
+                else -> "directive"
+            }
+            out[name] = detail
+        }
+        for ((alias, real) in EdgeDirectives.ALIASES) {
+            if (real in names) {
+                out.putIfAbsent(alias, "→ @$real")
+            }
+        }
+        return out.map { (n, d) -> n to d }
     }
 
     /** @deprecated Prefer [AdonisModelResolver.columnsFor]; kept for tests. */

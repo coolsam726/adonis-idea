@@ -47,8 +47,9 @@ object EdgeColors {
         "EDGE_ECHO",
         DefaultLanguageHighlighterColors.TEMPLATE_LANGUAGE_COLOR,
     )
+    /** Directives / tag components — keyword weight so Edge does not look flat. */
     val DIRECTIVE: TextAttributesKey = TextAttributesKey.createTextAttributesKey(
         "EDGE_DIRECTIVE",
-        DefaultLanguageHighlighterColors.KEYWORD,
+        DefaultLanguageHighlighterColors.METADATA,
     )
 }

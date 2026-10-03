@@ -153,11 +153,28 @@ class EdgeLexer : LexerBase() {
         // `@!component` — optional bang after `@`.
         if (j < endOffset && text[j] == '!') j++
         val nameStart = j
+        if (j >= endOffset || !isIdentStart(text[j])) return -1
         while (j < endOffset && isIdentPart(text[j])) j++
+        // Tag components: `@layouts.app`, `@components.button.primary`
+        while (j + 1 < endOffset && text[j] == '.' && isIdentStart(text[j + 1])) {
+            j++
+            while (j < endOffset && isIdentPart(text[j])) j++
+        }
         if (j == nameStart) return -1
-        // Only known directives, so `hi@example.com` stays HTML text.
-        if (text.subSequence(nameStart, j).toString() !in EdgeDirectives.NAMES) return -1
-        // Directives carry their argument list so `@if(a > b)` cannot break HTML.
+        val name = text.subSequence(nameStart, j).toString()
+        val dotted = name.contains('.')
+        if (dotted) {
+            // Tag components (`@layouts.app`) — not email domains (`hi@example.com`).
+            val root = name.substringBefore('.')
+            var k = j
+            while (k < endOffset && text[k].isWhitespace()) k++
+            val hasArgs = k < endOffset && text[k] == '('
+            if (root !in TAG_COMPONENT_ROOTS && !hasArgs) return -1
+        } else if (name !in EdgeDirectives.NAMES) {
+            return -1
+        }
+        // Directives carry their argument list so `@if(a > b)` / `@layouts.app({…})`
+        // cannot break the HTML layer.
         if (j < endOffset && text[j] == '(') {
             val close = matchingParen(text, j)
             j = if (close >= 0) close + 1 else endOffset
@@ -166,18 +183,30 @@ class EdgeLexer : LexerBase() {
     }
 
     private fun matchingParen(text: CharSequence, open: Int): Int {
-        var depth = 0
+        var paren = 0
+        var brace = 0
+        var bracket = 0
         var quote: Char? = null
         var i = open
         while (i < endOffset) {
             val c = text[i]
             when {
-                quote != null -> if (c == quote) quote = null
+                quote != null -> {
+                    if (c == '\\' && i + 1 < endOffset) {
+                        i += 2
+                        continue
+                    }
+                    if (c == quote) quote = null
+                }
                 c == '"' || c == '\'' -> quote = c
-                c == '(' -> depth++
+                c == '{' -> brace++
+                c == '}' -> brace--
+                c == '[' -> bracket++
+                c == ']' -> bracket--
+                c == '(' -> paren++
                 c == ')' -> {
-                    depth--
-                    if (depth == 0) return i
+                    paren--
+                    if (paren == 0 && brace <= 0 && bracket <= 0) return i
                 }
             }
             i++
@@ -203,5 +232,14 @@ class EdgeLexer : LexerBase() {
         return -1
     }
 
+    private fun isIdentStart(c: Char): Boolean = c == '_' || c.isLetter()
+
     private fun isIdentPart(c: Char): Boolean = c == '_' || c.isLetterOrDigit()
+
+    companion object {
+        /** First segment of Edge file-based tag components. */
+        private val TAG_COMPONENT_ROOTS: Set<String> = setOf(
+            "layouts", "components", "partials", "shamar", "wire",
+        )
+    }
 }
