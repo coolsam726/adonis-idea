@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - EdgeJS guide fidelity: lex/complete arbitrary `@form` / `@!button` tag components
 - Object-literal prop sites: `route` → routes, `method` → HTTP verbs, starter-kit prop keys
@@ -8,6 +8,7 @@
 - Escape `@{{ … }}`, trailing `~` on directives, `@dump`, seeded `$slots` / `$context` / helpers
 - Raw `{!! … !!}` echo coloring; Adonis brand icon on `*.edge` files (incl. dark variant)
 - GTD / Find Usages for Edge tag names and `route:` prop values
+- Adonis menu / tool-window icon sized to 16×16
 
 ## 0.2.0
 

@@ -66,6 +66,12 @@ intellijPlatform {
         changeNotes.set(
             """
             <ul>
+              <li>0.3.0 — EdgeJS guide fidelity: arbitrary <code>@form</code> /
+                  <code>@!button</code> tag components; object props
+                  (<code>route</code>/<code>method</code>/starter-kit keys);
+                  <code>@includeIf</code> 2nd-arg views; <code>router.on().render</code>;
+                  <code>@{{</code> escape; <code>@dump</code>; <code>${'$'}slots</code> /
+                  helpers; raw echo coloring; Adonis <code>*.edge</code> icons.</li>
               <li>0.2.0 — Plugin id <code>dev.shamar.adonis.ide</code>; official AdonisJS
                   icon; precise controller-action navigation; view.render completions;
                   Edge layouts/page structure + color scheme; two-way env keys;
