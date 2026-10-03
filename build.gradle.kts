@@ -66,6 +66,8 @@ intellijPlatform {
         changeNotes.set(
             """
             <ul>
+              <li>0.3.6 — GitHub Funding (Sponsors + Ko-fi); README Marketplace
+                  badge CTA (no iframe).</li>
               <li>0.3.5 — WebStorm-only product scope; Marketplace-first README
                   install; Marketplace screenshots (1280×800).</li>
               <li>0.3.4 — Monochrome tool-window icon so New UI paints the Adonis

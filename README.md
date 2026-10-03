@@ -14,13 +14,11 @@
   <a href="https://github.com/coolsam726/adonisjs-jetbrains-plugin/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/coolsam726/adonisjs-jetbrains-plugin/ci.yml?branch=main&style=for-the-badge&label=CI&logo=githubactions&logoColor=white" alt="CI" /></a>
 </p>
 
-<p align="center" id="jetbrains-marketplace-install">
-  <iframe src="https://plugins.jetbrains.com/embeddable/install/34737" height="48" width="280" frameborder="0" title="Install AdonisJS from JetBrains Marketplace"></iframe>
+<p align="center">
+  <a href="https://plugins.jetbrains.com/plugin/34737-adonisjs">
+    <img src="https://img.shields.io/badge/Get_from-Marketplace-000000?style=for-the-badge&logo=jetbrains&logoColor=white" alt="Get from Marketplace" />
+  </a>
 </p>
-<script src="https://plugins.jetbrains.com/assets/scripts/mp-widget.js"></script>
-<script>
-  MarketplaceWidget.setupMarketplaceWidget('install', 34737, "#jetbrains-marketplace-install");
-</script>
 
 **AdonisJS** (plugin id `dev.shamar.adonis.ide`) is a native JetBrains plugin for [AdonisJS](https://adonisjs.com) in **WebStorm**.  
 It adds Edge language support, deep completions, precise navigation, Ace generators, Lucid/Mongoose helpers, Wire attributes, and optional [Shamar](https://github.com/coolsam726/shamar) intelligence — **without requiring any `@shamar/*` packages**.

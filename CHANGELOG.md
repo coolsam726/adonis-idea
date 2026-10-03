@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.6
+
+- GitHub Funding (Sponsors + Ko-fi); README Marketplace CTA uses a badge (iframe does not render on GitHub)
+
 ## 0.3.5
 
 - WebStorm-only product compatibility (`JavaScript` depend + IntelliJ IDEA `incompatible-with`)
