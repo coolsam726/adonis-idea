@@ -122,6 +122,7 @@ kover {
                     "dev.shamar.adonis.ide.EdgeLanguage$*",
                     "dev.shamar.adonis.ide.EdgeBraceMatcher",
                     "dev.shamar.adonis.ide.EdgeTypedHandler",
+                    "dev.shamar.adonis.ide.EdgeCompletionConfidence",
                     "dev.shamar.adonis.ide.EdgeSyntaxHighlighter*",
                     "dev.shamar.adonis.ide.EdgeColorSettingsPage",
                     "dev.shamar.adonis.ide.EdgeColorSettingsPage*",

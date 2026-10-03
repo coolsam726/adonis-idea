@@ -6,6 +6,7 @@ import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.codeInsight.completion.InsertHandler
+import com.intellij.codeInsight.completion.PlainPrefixMatcher
 import com.intellij.codeInsight.completion.PrioritizedLookupElement
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
@@ -48,9 +49,12 @@ class AdonisCompletionContributor : CompletionContributor() {
                     val site = CallSiteDetector.detect(before, dotenvFile = isEnv)
 
                     // Edge `@` / `@ea` — always offer directives (index optional).
-                    // stopHere so HTML tag completion cannot steal `@form` → `<form>`.
-                    if (site?.kind == SymbolKind.DIRECTIVE) {
-                        addDirectiveCompletions(result, index, site.prefix)
+                    // Also treat bare trailing `@` when detector somehow missed.
+                    val atDirective = site?.kind == SymbolKind.DIRECTIVE ||
+                        (isEdge && (before.endsWith("@") || before.endsWith("@!")))
+                    if (atDirective) {
+                        val prefix = site?.prefix.orEmpty()
+                        addDirectiveCompletions(result, index, prefix)
                         result.stopHere()
                         return
                     }
@@ -148,8 +152,9 @@ class AdonisCompletionContributor : CompletionContributor() {
             index: AdonisIndex,
             prefix: String,
         ) {
-            // Empty prefix after `@` must list everything — do not inherit a sticky matcher.
-            val prefixed = result.withPrefixMatcher(prefix)
+            // Empty prefix after `@` must list everything — do not inherit a sticky matcher
+            // (autopopup often arrives with a leftover HTML/identifier matcher).
+            val prefixed = result.withPrefixMatcher(PlainPrefixMatcher(prefix, /* caseSensitive = */ false))
             for (item in directiveLookups(index, prefix)) {
                 var element = LookupElementBuilder.create(item.insertName)
                     .withPresentableText(item.presentable)

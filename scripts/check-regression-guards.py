@@ -113,13 +113,21 @@ def check_form_contracts() -> None:
     typed = read("src/main/kotlin/dev/shamar/adonis/ide/EdgeTypedHandler.kt")
     if "scheduleAutoPopup" not in typed:
         err("REGRESSION(@popup): EdgeTypedHandler must scheduleAutoPopup")
-    # Scheduling must happen in charTyped, not only in checkAutoPopup before insert.
     check_fn = typed.split("fun checkAutoPopup", 1)
-    if len(check_fn) == 2 and "scheduleAutoPopup" in check_fn[1].split("fun ", 1)[0]:
+    if len(check_fn) < 2 or "scheduleAutoPopup" not in check_fn[1].split("fun charTyped", 1)[0]:
         err(
-            "REGRESSION(@popup): checkAutoPopup must not scheduleAutoPopup "
-            "(schedule after '@' is inserted in charTyped)"
+            "REGRESSION(@popup): checkAutoPopup must scheduleAutoPopup "
+            "(JetBrains contract — Condition runs on up-to-date PSI)"
         )
+    if "EdgeCompletionConfidence" not in read(
+        "src/main/kotlin/dev/shamar/adonis/ide/EdgeCompletionConfidence.kt"
+    ):
+        err("REGRESSION(@popup): EdgeCompletionConfidence class missing")
+    plugin = read("src/main/resources/META-INF/plugin.xml")
+    if "EdgeCompletionConfidence" not in plugin:
+        err("REGRESSION(@popup): plugin.xml must register EdgeCompletionConfidence")
+    if 'completion.contributor' in plugin and 'order="first"' not in plugin:
+        err("REGRESSION(@popup): completion.contributor should be order=first")
 
 
 def check_plugin_xml() -> None:

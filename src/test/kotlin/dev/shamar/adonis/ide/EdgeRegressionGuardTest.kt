@@ -97,13 +97,13 @@ class EdgeRegressionGuardTest : BasePlatformTestCase() {
         )
     }
 
-    fun `test regression at autopopup - checkAutoPopup stops for at and charTyped schedules after insert`() {
+    fun `test regression at autopopup - checkAutoPopup schedules and confidence never skips`() {
         myFixture.configureByText("guard.edge", "")
         val handler = EdgeTypedHandler()
         WriteCommandAction.runWriteCommandAction(project) {
             assertEquals(
-                "REGRESSION(@popup): checkAutoPopup('@') must STOP " +
-                    "(do not schedule before '@' is in the document)",
+                "REGRESSION(@popup): checkAutoPopup('@') must STOP after scheduling " +
+                    "(platform contract — Condition runs on up-to-date PSI)",
                 TypedHandlerDelegate.Result.STOP,
                 handler.checkAutoPopup('@', project, myFixture.editor, myFixture.file),
             )
@@ -114,7 +114,6 @@ class EdgeRegressionGuardTest : BasePlatformTestCase() {
                 TypedHandlerDelegate.Result.CONTINUE,
                 handler.charTyped('@', project, myFixture.editor, myFixture.file),
             )
-            // Continuing a directive name keeps the popup alive.
             myFixture.editor.document.setText("@f")
             myFixture.editor.caretModel.moveToOffset(2)
             assertEquals(
@@ -122,6 +121,10 @@ class EdgeRegressionGuardTest : BasePlatformTestCase() {
                 handler.charTyped('f', project, myFixture.editor, myFixture.file),
             )
         }
+        assertTrue(
+            "REGRESSION(@popup): EDGE_FILE condition must accept *.edge",
+            EdgeTypedHandler.EDGE_FILE.value(myFixture.file),
+        )
         assertEquals(
             "REGRESSION(@popup): CallSiteDetector must see bare '@' as DIRECTIVE",
             SymbolKind.DIRECTIVE,
@@ -130,6 +133,31 @@ class EdgeRegressionGuardTest : BasePlatformTestCase() {
         assertEquals(
             SymbolKind.DIRECTIVE,
             CallSiteDetector.detect("@form")!!.kind,
+        )
+
+        // HTML confidence must not cancel the popup after `@`.
+        myFixture.configureByText("conf.edge", "@")
+        myFixture.editor.caretModel.moveToOffset(1)
+        val confidence = EdgeCompletionConfidence()
+        val skip = confidence.shouldSkipAutopopup(myFixture.file, myFixture.file, 1)
+        assertEquals(
+            "REGRESSION(@popup): EdgeCompletionConfidence must return NO (never skip) after '@'",
+            com.intellij.util.ThreeState.NO,
+            skip,
+        )
+
+        val typedSrc = readMainSource("EdgeTypedHandler.kt")
+        assertTrue(
+            "REGRESSION(@popup): checkAutoPopup must scheduleAutoPopup (JetBrains contract)",
+            typedSrc.contains("fun checkAutoPopup") &&
+                typedSrc.substringAfter("fun checkAutoPopup")
+                    .substringBefore("fun charTyped")
+                    .contains("scheduleAutoPopup"),
+        )
+        val xml = readResourceText("META-INF/plugin.xml")
+        assertTrue(
+            "REGRESSION(@popup): plugin.xml must register EdgeCompletionConfidence",
+            xml.contains("EdgeCompletionConfidence"),
         )
     }
 
