@@ -17,6 +17,8 @@ object EdgeTagRegistry {
         "vite", "stack", "pushTo", "svg",
         "debugger", "newError", "dump",
         "wire", "persist",
+        // Hypermedia starter-kit tag components (accepted while typing, before `(`).
+        "form", "link", "button", "avatar",
         "end",
         "endif", "endunless", "endeach", "endcomponent", "endslot",
         "endsection", "endlayout", "endwire", "endpersist",
@@ -25,6 +27,7 @@ object EdgeTagRegistry {
     val OPENERS: Set<String> = setOf(
         "if", "unless", "each", "component", "slot", "section", "layout",
         "wire", "persist", "page", "pushTo",
+        "form",
     )
 
     val MID_BLOCK: Set<String> = setOf("elseif", "else")

@@ -9,7 +9,7 @@ import com.intellij.psi.PsiFile
 /**
  * Edge typing aids:
  * - `{{` closes as `{{  }}` with the caret in the middle
- * - Typing `@` immediately opens directive completion
+ * - Typing `@` (and continuing a directive name) opens directive completion
  */
 class EdgeTypedHandler : TypedHandlerDelegate() {
     override fun charTyped(
@@ -18,9 +18,17 @@ class EdgeTypedHandler : TypedHandlerDelegate() {
         editor: Editor,
         file: PsiFile,
     ): Result {
-        if (c == '@' && isEdge(file)) {
-            AutoPopupController.getInstance(project).scheduleAutoPopup(editor)
-            return Result.CONTINUE
+        if (isEdge(file)) {
+            if (c == '@' || isDirectiveContinue(c)) {
+                val before = editor.document.text.substring(
+                    0,
+                    editor.caretModel.offset.coerceAtMost(editor.document.textLength),
+                )
+                if (c == '@' || CallSiteDetector.detect(before)?.kind == SymbolKind.DIRECTIVE) {
+                    AutoPopupController.getInstance(project).scheduleAutoPopup(editor)
+                }
+            }
+            if (c == '@') return Result.CONTINUE
         }
         if (c != '{' || !isEdge(file)) return Result.CONTINUE
         val document = editor.document
@@ -56,12 +64,14 @@ class EdgeTypedHandler : TypedHandlerDelegate() {
         if (!isEdge(file)) return Result.CONTINUE
         if (c == '{' || c == '}') return Result.STOP
         if (c == '@') {
-            // `@` is not an identifier start — force the completion popup.
-            AutoPopupController.getInstance(project).scheduleAutoPopup(editor)
+            // Schedule in charTyped after `@` is in the document — not here.
             return Result.STOP
         }
         return Result.CONTINUE
     }
+
+    private fun isDirectiveContinue(c: Char): Boolean =
+        c == '!' || c == '.' || c.isLetterOrDigit() || c == '_'
 
     private fun isEdge(file: PsiFile): Boolean =
         file.viewProvider.baseLanguage === EdgeLanguage ||

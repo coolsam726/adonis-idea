@@ -134,6 +134,7 @@ kover {
                     "dev.shamar.adonis.ide.AceRunConfiguration$*",
                     "dev.shamar.adonis.ide.AceSettingsEditor",
                     "dev.shamar.adonis.ide.RebuildIndexAction",
+                    "dev.shamar.adonis.ide.RebuildIndexAction*",
                     "dev.shamar.adonis.ide.AdonisReferenceContributor",
                     "dev.shamar.adonis.ide.AdonisReferenceProvider",
                     "dev.shamar.adonis.ide.AdonisCompletionContributor",

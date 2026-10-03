@@ -157,7 +157,19 @@ object AdonisCompletionCatalog {
         for (tag in tagComponentNames(index)) {
             out.putIfAbsent(tag, "component")
         }
+        // Always seed starter-kit tags + snippet names (index may not list them yet).
+        for (name in EdgeDirectiveSnippets.snippetNames()) {
+            val detail = EdgeDirectiveSnippets.specFor(name)?.detail ?: "directive"
+            out.putIfAbsent(name, detail)
+        }
+        for (key in EdgeTagRegistry.PROP_KEYS.keys) {
+            out.putIfAbsent(key, "component")
+            val root = key.substringBefore('.')
+            if (root != key) out.putIfAbsent(root, "component")
+        }
         out.putIfAbsent("!component", "component")
+        out.putIfAbsent("!button", "component")
+        out.putIfAbsent("!link", "component")
         for ((alias, real) in EdgeDirectives.ALIASES) {
             // Hide Blade-style `endif` / `endeach` aliases from the `@` list.
             if (alias.startsWith("end")) continue

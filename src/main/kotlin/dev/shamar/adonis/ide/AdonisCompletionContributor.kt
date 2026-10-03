@@ -6,6 +6,7 @@ import com.intellij.codeInsight.completion.CompletionProvider
 import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.CompletionType
 import com.intellij.codeInsight.completion.InsertHandler
+import com.intellij.codeInsight.completion.PrioritizedLookupElement
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.patterns.PlatformPatterns
@@ -38,6 +39,7 @@ class AdonisCompletionContributor : CompletionContributor() {
                     val isEnv = name == ".env" || name.startsWith(".env.")
 
                     val project = parameters.position.project
+                    // [AdonisProjectService.index] never blocks the EDT on a cold rebuild.
                     val index = AdonisProjectService.getInstance(project).index()
 
                     val document = parameters.editor.document
@@ -46,8 +48,10 @@ class AdonisCompletionContributor : CompletionContributor() {
                     val site = CallSiteDetector.detect(before, dotenvFile = isEnv)
 
                     // Edge `@` / `@ea` — always offer directives (index optional).
+                    // stopHere so HTML tag completion cannot steal `@form` → `<form>`.
                     if (site?.kind == SymbolKind.DIRECTIVE) {
                         addDirectiveCompletions(result, index, site.prefix)
+                        result.stopHere()
                         return
                     }
 
@@ -158,7 +162,8 @@ class AdonisCompletionContributor : CompletionContributor() {
                 if (item.bold) {
                     element = element.bold()
                 }
-                prefixed.addElement(element)
+                // Beat HTML tag / attribute contributors for `@form`, `@button`, …
+                prefixed.addElement(PrioritizedLookupElement.withPriority(element, 1000.0))
             }
         }
 

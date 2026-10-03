@@ -8,6 +8,7 @@ import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.table.JBTable
+import icons.AdonisIcons
 import java.awt.BorderLayout
 import javax.swing.JButton
 import javax.swing.JPanel
@@ -18,7 +19,12 @@ import javax.swing.table.AbstractTableModel
  * UI shell; rows/status from [AdonisToolWindowModel].
  */
 class AdonisToolWindowFactory : ToolWindowFactory {
+    override fun init(toolWindow: ToolWindow) {
+        toolWindow.setIcon(AdonisIcons.ToolWindow)
+    }
+
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
+        toolWindow.setIcon(AdonisIcons.ToolWindow)
         val panel = AdonisToolWindowPanel(project)
         val content = ContentFactory.getInstance().createContent(panel, "", false)
         toolWindow.contentManager.addContent(content)
@@ -30,13 +36,17 @@ class AdonisToolWindowPanel(private val project: Project) : JPanel(BorderLayout(
     private val filter = JBTextField()
     private val model = SymbolTableModel()
     private val table = JBTable(model)
+    private val rebuild = JButton("Rebuild Index")
 
     init {
         val top = JPanel(BorderLayout(8, 8))
-        val rebuild = JButton("Rebuild Index")
         rebuild.addActionListener {
-            AdonisProjectService.getInstance(project).rebuild()
-            refresh()
+            rebuild.isEnabled = false
+            status.text = "Indexing…"
+            AdonisProjectService.getInstance(project).rebuildAsync {
+                rebuild.isEnabled = true
+                applyIndex(it)
+            }
         }
         top.add(rebuild, BorderLayout.WEST)
         top.add(status, BorderLayout.CENTER)
@@ -57,7 +67,17 @@ class AdonisToolWindowPanel(private val project: Project) : JPanel(BorderLayout(
     }
 
     fun refresh() {
-        val index = AdonisProjectService.getInstance(project).index()
+        val service = AdonisProjectService.getInstance(project)
+        val cached = service.cachedIndex()
+        if (cached == null) {
+            status.text = "Indexing…"
+            service.rebuildAsync { applyIndex(it) }
+            return
+        }
+        applyIndex(cached)
+    }
+
+    private fun applyIndex(index: AdonisIndex) {
         val summary = AdonisToolWindowModel.summary(index)
         status.text = AdonisToolWindowModel.statusLine(summary)
         model.rows = AdonisToolWindowModel.symbolRows(index, filter.text)
