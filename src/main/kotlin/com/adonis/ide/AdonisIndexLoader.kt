@@ -159,7 +159,10 @@ object AdonisIndexLoader {
             )
         }
 
-        val shamar = parseShamar(root.getAsJsonObject("shamar"))
+        val shamarEl = root.get("shamar")
+        val shamar = parseShamar(
+            if (shamarEl != null && shamarEl.isJsonObject) shamarEl.asJsonObject else null,
+        )
 
         return AdonisIndex(
             basePath = stringOrNull(root, "base_path") ?: "",

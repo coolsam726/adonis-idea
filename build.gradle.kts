@@ -182,8 +182,7 @@ kover {
         verify {
             rule {
                 bound {
-                    // v0.1.0 gate; raise to 98 once remaining Edge/ORM edge branches are filled.
-                    minValue.set(97)
+                    minValue.set(100)
                     coverageUnits.set(CoverageUnit.LINE)
                     aggregationForGroup.set(AggregationType.COVERED_PERCENTAGE)
                 }

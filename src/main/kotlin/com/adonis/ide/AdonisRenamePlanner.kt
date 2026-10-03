@@ -123,10 +123,10 @@ object AdonisRenamePlanner {
     ): FileMove? {
         if (kind != SymbolKind.VIEW && kind != SymbolKind.COMPONENT) return null
         if (indexedPath.isNullOrBlank()) return null
-        val to = when (kind) {
-            SymbolKind.VIEW -> AdonisCodeActionPlanner.viewPathForName(basePath, newName).toString()
-            SymbolKind.COMPONENT -> AdonisCodeActionPlanner.componentPathForName(basePath, newName).toString()
-            else -> return null
+        val to = if (kind == SymbolKind.COMPONENT) {
+            AdonisCodeActionPlanner.componentPathForName(basePath, newName).toString()
+        } else {
+            AdonisCodeActionPlanner.viewPathForName(basePath, newName).toString()
         }
         if (indexedPath.replace('\\', '/') == to.replace('\\', '/')) return null
         return FileMove(fromPath = indexedPath, toPath = to)

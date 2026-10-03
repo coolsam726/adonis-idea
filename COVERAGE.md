@@ -1,20 +1,23 @@
 # Coverage
 
-Adonis Idea enforces line coverage on product logic via
+Adonis Idea enforces **100% line coverage** on the verified product-logic set via
 [Kover](https://github.com/Kotlin/kotlinx-kover):
 
 ```bash
 ./gradlew test koverHtmlReport koverVerify
 # HTML: build/reports/kover/html/index.html
+# XML:  build/reports/kover/report.xml
 ```
 
-`./gradlew check` runs `koverVerify`.
+`./gradlew check` runs `koverVerify` and fails the build under 100%.
 
 ## Policy
 
 - New intelligence (call-site detection, rename plans, code-action planners,
-  index parsing, generators, DB planner) lives in **unit-testable** objects.
+  index parsing, generators, DB planner) lives in **unit-testable** objects with
+  tests in `src/test/kotlin/com/adonis/ide/`.
 - Exclusions in `build.gradle.kts` are limited to thin IntelliJ Platform shells
-  and OS-heavy file walkers.
-- v0.1.0 gate is **≥ 97%** line coverage; target **≥ 98%** as remaining Edge/ORM
-  branches fill in (same spirit as almasix-idea).
+  (listeners, run-config UI, highlighter providers, PSI wiring, file walkers).
+- Do **not** park feature logic in excluded classes to dodge the gate.
+- Exhaust suites: `AdonisCoverageExhaustTest`, `AdonisCoverageBoostTest`,
+  `AdonisFullParityTest`, `AdonisHundredPercentTest`.
