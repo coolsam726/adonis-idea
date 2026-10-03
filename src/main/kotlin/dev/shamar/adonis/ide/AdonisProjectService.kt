@@ -1,5 +1,6 @@
 package dev.shamar.adonis.ide
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.project.Project
@@ -7,6 +8,7 @@ import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.vfs.VirtualFile
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -15,6 +17,7 @@ import java.util.concurrent.atomic.AtomicReference
 @Service(Service.Level.PROJECT)
 class AdonisProjectService(private val project: Project) {
     private val indexRef = AtomicReference<AdonisIndex?>(null)
+    private val rebuildScheduled = AtomicBoolean(false)
     private val LOG = logger<AdonisProjectService>()
 
     fun appRoot(): Path? {
@@ -27,8 +30,21 @@ class AdonisProjectService(private val project: Project) {
         return findAppRoot(base)
     }
 
+    /** Cached index, or null when never built / invalidated. */
+    fun cachedIndex(): AdonisIndex? = indexRef.get()
+
+    /**
+     * Returns the cached index when warm. On a cold cache:
+     * - background thread / unit tests → builds synchronously
+     * - EDT → schedules a background rebuild and returns a non-blocking placeholder
+     *   (never runs the Node indexer on the EDT).
+     */
     fun index(): AdonisIndex {
         indexRef.get()?.let { return it }
+        if (mustNotBlockEdt()) {
+            scheduleRebuild()
+            return AdonisIndex.empty(error = "Indexing…")
+        }
         return rebuild()
     }
 
@@ -47,11 +63,37 @@ class AdonisProjectService(private val project: Project) {
             }
         }
         indexRef.set(built)
+        rebuildScheduled.set(false)
         return built
+    }
+
+    /**
+     * Run [rebuild] off the EDT, then invoke [onDone] on the EDT (if provided).
+     */
+    fun rebuildAsync(onDone: ((AdonisIndex) -> Unit)? = null) {
+        val app = ApplicationManager.getApplication()
+        app.executeOnPooledThread {
+            val built = rebuild()
+            if (onDone != null) {
+                app.invokeLater { onDone(built) }
+            }
+        }
     }
 
     fun invalidate() {
         indexRef.set(null)
+        rebuildScheduled.set(false)
+    }
+
+    private fun scheduleRebuild() {
+        if (!rebuildScheduled.compareAndSet(false, true)) return
+        rebuildAsync()
+    }
+
+    private fun mustNotBlockEdt(): Boolean {
+        val app = ApplicationManager.getApplication() ?: return false
+        if (app.isUnitTestMode) return false
+        return app.isDispatchThread
     }
 
     companion object {

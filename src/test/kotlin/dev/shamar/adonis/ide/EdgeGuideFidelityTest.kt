@@ -22,6 +22,11 @@ class EdgeGuideFidelityTest : BasePlatformTestCase() {
             listOf(EdgeTokens.DIRECTIVE),
             tokenize("@form({ route: 'posts.store' })").map { it.first },
         )
+        // Bare `@form` (while typing, before `(`) must stay an Edge directive — not HTML.
+        assertEquals(
+            listOf(EdgeTokens.DIRECTIVE),
+            tokenize("@form").map { it.first },
+        )
         assertEquals(
             listOf(EdgeTokens.DIRECTIVE),
             tokenize("@!button({ text: 'Go' })").map { it.first },
@@ -65,6 +70,16 @@ class EdgeGuideFidelityTest : BasePlatformTestCase() {
             AdonisEdgeStructure.analyze(
                 "@form({ route: 'posts.store' })\n  fields\n@end",
             ).isEmpty(),
+        )
+    }
+
+    fun `test custom undotted tag call is block opener`() {
+        // `@card(` is not in OPENERS — structure still treats argful tag components as blocks.
+        assertTrue(
+            AdonisEdgeStructure.analyze("@card({ title: 'Hi' })\n  body\n@end").isEmpty(),
+        )
+        assertTrue(
+            AdonisEdgeStructure.analyze("@card({ title: 'Hi' })\n  body").isNotEmpty(),
         )
     }
 
@@ -115,6 +130,12 @@ class EdgeGuideFidelityTest : BasePlatformTestCase() {
     }
 
     fun `test directive completions include dump and tag components`() {
+        // Empty index: starter-kit tags / snippets must still appear (no HTML steal).
+        val cold = AdonisCompletionCatalog.directiveCompletions(AdonisIndex.empty())
+        assertTrue(cold.any { it.first == "form" })
+        assertTrue(cold.any { it.first == "!button" })
+        assertTrue(cold.any { it.first == "dump" })
+
         val index = AdonisIndex(
             ok = true,
             components = mapOf("form" to "/tmp/form.edge", "field.root" to "/tmp/fr.edge"),
@@ -125,6 +146,32 @@ class EdgeGuideFidelityTest : BasePlatformTestCase() {
         assertTrue(items.any { it.first == "field.root" })
         assertTrue(items.any { it.first == "includeIf" })
         assertFalse(items.any { it.first == "endif" })
+    }
+
+    fun `test dark theme icons are well formed svg`() {
+        val loader = AdonisIcons::class.java.classLoader
+        for (path in listOf(
+            "icons/adonis.svg",
+            "icons/adonis_dark.svg",
+            "icons/edge.svg",
+            "icons/edge_dark.svg",
+        )) {
+            val stream = loader.getResourceAsStream(path)
+            assertNotNull("missing $path", stream)
+            val bytes = stream!!.readBytes()
+            assertTrue(
+                "$path has control bytes",
+                bytes.none { b ->
+                    val u = b.toInt() and 0xFF
+                    u < 32 && u !in setOf(9, 10, 13)
+                },
+            )
+            assertTrue("$path empty", bytes.isNotEmpty())
+            javax.xml.parsers.DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder()
+                .parse(java.io.ByteArrayInputStream(bytes))
+        }
+        assertSame(AdonisIcons.File, AdonisIcons.ToolWindow)
     }
 
     fun `test raw echo has distinct color key`() {
