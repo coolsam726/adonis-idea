@@ -1,7 +1,7 @@
 <idea-plugin require-restart="true">
-  <id>com.adonis.ide</id>
+  <id>dev.shamar.adonis.ide</id>
   <name>Adonis Idea</name>
-  <vendor url="https://github.com/coolsam726/adonis-idea">Adonis Idea</vendor>
+  <vendor url="https://github.com/coolsam726/adonis-idea">Shamar</vendor>
   <description><![CDATA[
     <p><b>Adonis Idea</b> — native JetBrains support for AdonisJS (WebStorm):</p>
     <ul>
@@ -40,66 +40,66 @@
   <extensions defaultExtensionNs="com.intellij">
     <fileType
         name="Edge"
-        implementationClass="com.adonis.ide.EdgeFileType"
+        implementationClass="dev.shamar.adonis.ide.EdgeFileType"
         fieldName="INSTANCE"
         language="Edge"
         extensions="edge"
         patterns="*.edge"/>
 
-    <fileTypeOverrider implementation="com.adonis.ide.EdgeFileTypeOverrider"/>
-    <fileTypeDetector implementation="com.adonis.ide.EdgeFileTypeDetector" order="first"/>
+    <fileTypeOverrider implementation="dev.shamar.adonis.ide.EdgeFileTypeOverrider"/>
+    <fileTypeDetector implementation="dev.shamar.adonis.ide.EdgeFileTypeDetector" order="first"/>
 
-    <lang.parserDefinition language="Edge" implementationClass="com.adonis.ide.EdgeParserDefinition"/>
-    <lang.fileViewProviderFactory language="Edge" implementationClass="com.adonis.ide.EdgeFileViewProviderFactory"/>
+    <lang.parserDefinition language="Edge" implementationClass="dev.shamar.adonis.ide.EdgeParserDefinition"/>
+    <lang.fileViewProviderFactory language="Edge" implementationClass="dev.shamar.adonis.ide.EdgeFileViewProviderFactory"/>
 
-    <lang.syntaxHighlighterFactory language="Edge" implementationClass="com.adonis.ide.EdgeSyntaxHighlighterFactory"/>
-    <editorHighlighterProvider filetype="Edge" implementationClass="com.adonis.ide.EdgeEditorHighlighterProvider"/>
-    <colorSettingsPage implementation="com.adonis.ide.EdgeColorSettingsPage"/>
+    <lang.syntaxHighlighterFactory language="Edge" implementationClass="dev.shamar.adonis.ide.EdgeSyntaxHighlighterFactory"/>
+    <editorHighlighterProvider filetype="Edge" implementationClass="dev.shamar.adonis.ide.EdgeEditorHighlighterProvider"/>
+    <colorSettingsPage implementation="dev.shamar.adonis.ide.EdgeColorSettingsPage"/>
 
-    <typedHandler implementation="com.adonis.ide.EdgeTypedHandler"/>
-    <lang.braceMatcher language="Edge" implementationClass="com.adonis.ide.EdgeBraceMatcher"/>
+    <typedHandler implementation="dev.shamar.adonis.ide.EdgeTypedHandler"/>
+    <lang.braceMatcher language="Edge" implementationClass="dev.shamar.adonis.ide.EdgeBraceMatcher"/>
 
-    <configurationType implementation="com.adonis.ide.AceConfigurationType"/>
+    <configurationType implementation="dev.shamar.adonis.ide.AceConfigurationType"/>
 
-    <completion.contributor language="any" implementationClass="com.adonis.ide.AdonisCompletionContributor"/>
-    <annotator language="any" implementationClass="com.adonis.ide.AdonisAnnotator"/>
-    <annotator language="Edge" implementationClass="com.adonis.ide.AdonisEdgeStructureAnnotator"/>
-    <lang.documentationProvider language="any" implementationClass="com.adonis.ide.AdonisDocumentationProvider"/>
+    <completion.contributor language="any" implementationClass="dev.shamar.adonis.ide.AdonisCompletionContributor"/>
+    <annotator language="any" implementationClass="dev.shamar.adonis.ide.AdonisAnnotator"/>
+    <annotator language="Edge" implementationClass="dev.shamar.adonis.ide.AdonisEdgeStructureAnnotator"/>
+    <lang.documentationProvider language="any" implementationClass="dev.shamar.adonis.ide.AdonisDocumentationProvider"/>
     <intentionAction>
       <language>any</language>
-      <className>com.adonis.ide.AdonisCreateViewIntention</className>
+      <className>dev.shamar.adonis.ide.AdonisCreateViewIntention</className>
       <category>Adonis</category>
     </intentionAction>
     <intentionAction>
       <language>any</language>
-      <className>com.adonis.ide.AdonisAceMakeIntention</className>
+      <className>dev.shamar.adonis.ide.AdonisAceMakeIntention</className>
       <category>Adonis</category>
     </intentionAction>
     <intentionAction>
       <language>Edge</language>
-      <className>com.adonis.ide.AdonisExtractPartialIntention</className>
+      <className>dev.shamar.adonis.ide.AdonisExtractPartialIntention</className>
       <category>Adonis</category>
     </intentionAction>
     <intentionAction>
       <language>Edge</language>
-      <className>com.adonis.ide.AdonisIncludeToComponentIntention</className>
+      <className>dev.shamar.adonis.ide.AdonisIncludeToComponentIntention</className>
       <category>Adonis</category>
     </intentionAction>
     <intentionAction>
       <language>any</language>
-      <className>com.adonis.ide.AdonisInsertRelationStubIntention</className>
+      <className>dev.shamar.adonis.ide.AdonisInsertRelationStubIntention</className>
       <category>Adonis</category>
     </intentionAction>
-    <gotoDeclarationHandler implementation="com.adonis.ide.AdonisGotoDeclarationHandler"/>
-    <psi.referenceContributor implementation="com.adonis.ide.AdonisReferenceContributor"/>
-    <findUsagesHandlerFactory implementation="com.adonis.ide.AdonisFindUsagesHandlerFactory"/>
-    <referencesSearchQueryExecutor implementation="com.adonis.ide.AdonisReferencesSearchExecutor"/>
-    <renamePsiElementProcessor implementation="com.adonis.ide.AdonisRenameProcessor"/>
+    <gotoDeclarationHandler implementation="dev.shamar.adonis.ide.AdonisGotoDeclarationHandler"/>
+    <psi.referenceContributor implementation="dev.shamar.adonis.ide.AdonisReferenceContributor"/>
+    <findUsagesHandlerFactory implementation="dev.shamar.adonis.ide.AdonisFindUsagesHandlerFactory"/>
+    <referencesSearchQueryExecutor implementation="dev.shamar.adonis.ide.AdonisReferencesSearchExecutor"/>
+    <renamePsiElementProcessor implementation="dev.shamar.adonis.ide.AdonisRenameProcessor"/>
     <toolWindow
         id="Adonis"
         anchor="right"
         icon="/icons/adonis.svg"
-        factoryClass="com.adonis.ide.AdonisToolWindowFactory"/>
+        factoryClass="dev.shamar.adonis.ide.AdonisToolWindowFactory"/>
   </extensions>
 
   <actions>
@@ -111,13 +111,13 @@
       <add-to-group group-id="MainMenu" anchor="before" relative-to-action="HelpMenu"/>
       <add-to-group group-id="ToolsMenu" anchor="last"/>
       <action id="Adonis.RebuildIndex"
-              class="com.adonis.ide.RebuildIndexAction"
+              class="dev.shamar.adonis.ide.RebuildIndexAction"
               text="Rebuild Index"
               description="Rebuild the Adonis symbol index (bundled Node indexer)"
               icon="/icons/adonis.svg"/>
       <separator/>
       <group id="Adonis.New"
-             class="com.adonis.ide.AdonisMakeActionGroup"
+             class="dev.shamar.adonis.ide.AdonisMakeActionGroup"
              text="New…"
              description="Generate Adonis classes via node ace make:*"
              popup="true">
@@ -128,10 +128,10 @@
 
   <applicationListeners>
     <listener
-        class="com.adonis.ide.AdonisPluginListener"
+        class="dev.shamar.adonis.ide.AdonisPluginListener"
         topic="com.intellij.ide.plugins.DynamicPluginListener"/>
     <listener
-        class="com.adonis.ide.AdonisIndexWatcher"
+        class="dev.shamar.adonis.ide.AdonisIndexWatcher"
         topic="com.intellij.openapi.project.ProjectManagerListener"/>
   </applicationListeners>
 </idea-plugin>

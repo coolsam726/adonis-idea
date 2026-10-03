@@ -19,6 +19,8 @@
 **Adonis Idea** is a native JetBrains plugin for [AdonisJS](https://adonisjs.com) in **WebStorm**.  
 It adds Edge language support, deep completions, precise navigation, Ace generators, Lucid/Mongoose helpers, Wire attributes, and optional [Shamar](https://github.com/coolsam726/shamar) intelligence — **without requiring any `@shamar/*` packages**.
 
+Plugin id: `dev.shamar.adonis.ide`
+
 ---
 
 ## Quick start
