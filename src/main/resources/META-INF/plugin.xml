@@ -1,9 +1,9 @@
 <idea-plugin require-restart="true">
   <id>dev.shamar.adonis.ide</id>
-  <name>Adonis Idea</name>
+  <name>AdonisJS</name>
   <vendor url="https://github.com/coolsam726/adonis-idea">Shamar</vendor>
   <description><![CDATA[
-    <p><b>Adonis Idea</b> — native JetBrains support for AdonisJS (WebStorm):</p>
+    <p><b>AdonisJS</b> — native JetBrains support for AdonisJS (WebStorm):</p>
     <ul>
       <li>Edge (<code>*.edge</code>) — HTML colors with Edge overlays</li>
       <li>Deep completions + navigation (routes, views, config, env, middleware,
@@ -110,7 +110,7 @@
   <actions>
     <group id="Adonis.Menu"
            text="Adonis"
-           description="Adonis Idea"
+           description="AdonisJS"
            icon="/icons/adonis.svg"
            popup="true">
       <add-to-group group-id="MainMenu" anchor="before" relative-to-action="HelpMenu"/>
