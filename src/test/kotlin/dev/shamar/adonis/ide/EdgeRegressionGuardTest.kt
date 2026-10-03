@@ -234,6 +234,20 @@ class EdgeRegressionGuardTest : BasePlatformTestCase() {
         assertTrue(xml.contains("AdonisCompletionContributor"))
         assertTrue(xml.contains("AdonisToolWindowFactory"))
         assertTrue(xml.contains("""id="Adonis""""))
+        assertTrue(
+            "REGRESSION(products): must depend on JavaScript for WebStorm",
+            xml.contains("<depends>JavaScript</depends>"),
+        )
+        assertTrue(
+            "REGRESSION(products): must exclude IntelliJ IDEA (WebStorm only)",
+            xml.contains("<incompatible-with>com.intellij.modules.idea</incompatible-with>"),
+        )
+        assertTrue(
+            "REGRESSION(products): must exclude IntelliJ IDEA Community",
+            xml.contains(
+                "<incompatible-with>com.intellij.modules.idea.community</incompatible-with>",
+            ),
+        )
     }
 
     private fun tokenize(text: String): List<Pair<com.intellij.psi.tree.IElementType, String>> {

@@ -188,6 +188,9 @@ def check_plugin_xml() -> None:
         "AdonisCompletionContributor",
         "AdonisToolWindowFactory",
         'id="Adonis"',
+        "<depends>JavaScript</depends>",
+        "<incompatible-with>com.intellij.modules.idea</incompatible-with>",
+        "<incompatible-with>com.intellij.modules.idea.community</incompatible-with>",
     ):
         if needle not in xml:
             err(f"REGRESSION(plugin.xml): missing {needle!r}")

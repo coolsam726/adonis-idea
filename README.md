@@ -1,9 +1,7 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/AdonisJS-0.3.4-5A6DF5?style=for-the-badge&logo=adonisjs&logoColor=white" alt="AdonisJS 0.3.4" />
-</p>
-
-<p align="center">
-  <a href="https://github.com/coolsam726/adonis-idea/releases"><img src="https://img.shields.io/github/v/release/coolsam726/adonis-idea?style=for-the-badge&logo=github&label=Release&color=2ea44f" alt="Release" /></a>
+  <a href="https://plugins.jetbrains.com/plugin/34737-adonisjs"><img src="https://img.shields.io/jetbrains/plugin/v/34737.svg?label=Marketplace&style=for-the-badge&logo=jetbrains&color=000000" alt="JetBrains Marketplace" /></a>
+  <a href="https://plugins.jetbrains.com/plugin/34737-adonisjs"><img src="https://img.shields.io/jetbrains/plugin/d/34737.svg?style=for-the-badge&label=Downloads" alt="Downloads" /></a>
+  <a href="https://github.com/coolsam726/adonisjs-jetbrains-plugin/releases"><img src="https://img.shields.io/github/v/release/coolsam726/adonisjs-jetbrains-plugin?style=for-the-badge&logo=github&label=Release&color=2ea44f" alt="Release" /></a>
   <a href="https://www.jetbrains.com/webstorm/"><img src="https://img.shields.io/badge/WebStorm-2024.2+-000000?style=for-the-badge&logo=webstorm&logoColor=white" alt="WebStorm 2024.2+" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT License" /></a>
   <a href="COVERAGE.md"><img src="https://img.shields.io/badge/Coverage-100%25-brightgreen?style=for-the-badge&logo=kotlin&logoColor=white" alt="100% coverage" /></a>
@@ -13,25 +11,33 @@
   <img src="https://img.shields.io/badge/Edge-native-0AD4FA?style=for-the-badge&logo=html5&logoColor=white" alt="Native Edge" />
   <img src="https://img.shields.io/badge/Indexer-bundled_Node-339933?style=for-the-badge&logo=nodedotjs&logoColor=white" alt="Bundled Node indexer" />
   <img src="https://img.shields.io/badge/Shamar-optional-6E56CF?style=for-the-badge" alt="Optional Shamar" />
-  <a href="https://github.com/coolsam726/adonis-idea/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/coolsam726/adonis-idea/ci.yml?branch=main&style=for-the-badge&label=CI&logo=githubactions&logoColor=white" alt="CI" /></a>
+  <a href="https://github.com/coolsam726/adonisjs-jetbrains-plugin/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/coolsam726/adonisjs-jetbrains-plugin/ci.yml?branch=main&style=for-the-badge&label=CI&logo=githubactions&logoColor=white" alt="CI" /></a>
 </p>
+
+<p align="center" id="jetbrains-marketplace-install">
+  <iframe src="https://plugins.jetbrains.com/embeddable/install/34737" height="48" width="280" frameborder="0" title="Install AdonisJS from JetBrains Marketplace"></iframe>
+</p>
+<script src="https://plugins.jetbrains.com/assets/scripts/mp-widget.js"></script>
+<script>
+  MarketplaceWidget.setupMarketplaceWidget('install', 34737, "#jetbrains-marketplace-install");
+</script>
 
 **AdonisJS** (plugin id `dev.shamar.adonis.ide`) is a native JetBrains plugin for [AdonisJS](https://adonisjs.com) in **WebStorm**.  
 It adds Edge language support, deep completions, precise navigation, Ace generators, Lucid/Mongoose helpers, Wire attributes, and optional [Shamar](https://github.com/coolsam726/shamar) intelligence — **without requiring any `@shamar/*` packages**.
-
-Plugin id: `dev.shamar.adonis.ide`
 
 ---
 
 ## Quick start
 
-### 1. Install
+### 1. Install from the JetBrains Marketplace
 
-1. Download the latest `.zip` from [GitHub Releases](https://github.com/coolsam726/adonis-idea/releases).
-2. In WebStorm: **Settings → Plugins → ⚙ → Install Plugin from Disk…** → pick the zip.
-3. Restart the IDE when prompted.
+1. Open **WebStorm** → **Settings → Plugins → Marketplace**.
+2. Search for **AdonisJS** (or open [plugins.jetbrains.com/plugin/34737-adonisjs](https://plugins.jetbrains.com/plugin/34737-adonisjs)).
+3. Click **Install**, then restart the IDE when prompted.
 
 > Installing, updating, or removing the plugin requires a restart.
+
+Optional: for EAP / local builds, install a `.zip` from [GitHub Releases](https://github.com/coolsam726/adonisjs-jetbrains-plugin/releases) via **Settings → Plugins → ⚙ → Install Plugin from Disk…**.
 
 ### 2. Open an Adonis app
 
@@ -203,7 +209,7 @@ node indexer/index.mjs --path /path/to/your-adonis-app --json | head
 | No completions / empty tool window | Confirm Node is on `PATH`, then **Adonis → Rebuild Index** |
 | `*.edge` opens as HTML | **Settings → Editor → File Types** → associate `*.edge` with **Edge** |
 | Stale symbols after big changes | **Adonis → Rebuild Index** |
-| Ctrl-click on `'store'` still lists many symbols | Update to the latest release, then **Adonis → Rebuild Index** |
+| Ctrl-click on `'store'` still lists many symbols | Update the plugin from the Marketplace, then **Adonis → Rebuild Index** |
 | Plugin not offered in other IDEs | WebStorm is the supported product |
 
 Feature matrix vs Laravel IDEA / almasix-idea: [PARITY.md](PARITY.md).
@@ -218,10 +224,11 @@ Feature matrix vs Laravel IDEA / almasix-idea: [PARITY.md](PARITY.md).
 ./gradlew runIde             # WebStorm sandbox
 ```
 
-Regenerate README demo GIFs:
+Regenerate README demo GIFs and Marketplace screenshots (1280×800, ≥1200×760):
 
 ```bash
 python3 scripts/generate-readme-gifs.py
+python3 scripts/generate-marketplace-screenshots.py   # → docs/marketplace/*.png
 ```
 
 Coverage notes: [COVERAGE.md](COVERAGE.md). Changelog: [CHANGELOG.md](CHANGELOG.md).

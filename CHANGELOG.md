@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.5
+
+- WebStorm-only product compatibility (`JavaScript` depend + IntelliJ IDEA `incompatible-with`)
+- README install path is JetBrains Marketplace–first; Marketplace screenshots (1280×800)
+
 ## 0.3.4
 
 - Tool-window icon uses a monochrome mark so New UI shows the blue Adonis glyph when selected (not a blue blob over the brand logo)

@@ -18,8 +18,16 @@
 
   <depends>com.intellij.modules.platform</depends>
   <depends>com.intellij.modules.xml</depends>
+  <!-- WebStorm ships JS/TS; required so Marketplace treats this as a WebStorm plugin. -->
+  <depends>JavaScript</depends>
 
-  <!-- WebStorm primary; also load on IDEA with JS when the module is present. -->
+  <!--
+    WebStorm only. Marketplace + runtime loading use product-module aliases
+    (see Plugin Compatibility docs). Extra incompatible-with entries are no-ops
+    when the module is absent.
+  -->
+  <incompatible-with>com.intellij.modules.idea</incompatible-with>
+  <incompatible-with>com.intellij.modules.idea.community</incompatible-with>
   <incompatible-with>com.intellij.modules.phpstorm</incompatible-with>
   <incompatible-with>com.intellij.modules.goland</incompatible-with>
   <incompatible-with>com.intellij.modules.datagrip</incompatible-with>
