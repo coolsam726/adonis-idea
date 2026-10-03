@@ -1,0 +1,136 @@
+<idea-plugin require-restart="true">
+  <id>com.adonis.ide</id>
+  <name>Adonis Idea</name>
+  <vendor url="https://github.com/coolsam726/adonis-idea">Adonis Idea</vendor>
+  <description><![CDATA[
+    <p><b>Adonis Idea</b> — native JetBrains support for AdonisJS (WebStorm):</p>
+    <ul>
+      <li>Edge (<code>*.edge</code>) — HTML colors with Edge overlays</li>
+      <li>Deep completions + navigation (routes, views, config, env, middleware,
+          Lucid/Mongoose, Wire, optional Shamar)</li>
+      <li>Bundled Node indexer — <b>no</b> <code>@shamar/*</code> packages required</li>
+      <li>Ace run configurations and <code>make:*</code> generators</li>
+    </ul>
+    <p>Install from the JetBrains Marketplace, or sideload a zip from
+    <a href="https://github.com/coolsam726/adonis-idea/releases">GitHub Releases</a>.</p>
+    <p><b>Note:</b> installing, updating, or removing this plugin requires an IDE restart.</p>
+  ]]></description>
+
+  <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.modules.xml</depends>
+
+  <!-- WebStorm primary; also load on IDEA with JS when the module is present. -->
+  <incompatible-with>com.intellij.modules.phpstorm</incompatible-with>
+  <incompatible-with>com.intellij.modules.goland</incompatible-with>
+  <incompatible-with>com.intellij.modules.datagrip</incompatible-with>
+  <incompatible-with>com.intellij.modules.rider</incompatible-with>
+  <incompatible-with>com.intellij.modules.clion</incompatible-with>
+  <incompatible-with>com.intellij.clion</incompatible-with>
+  <incompatible-with>com.intellij.modules.rubymine</incompatible-with>
+  <incompatible-with>com.intellij.modules.appcode</incompatible-with>
+  <incompatible-with>com.intellij.modules.appcode.ide</incompatible-with>
+  <incompatible-with>com.intellij.modules.androidstudio</incompatible-with>
+  <incompatible-with>com.intellij.modules.dataspell</incompatible-with>
+  <incompatible-with>com.intellij.modules.aqua</incompatible-with>
+  <incompatible-with>com.intellij.modules.rustrover</incompatible-with>
+  <incompatible-with>com.intellij.modules.mps</incompatible-with>
+  <incompatible-with>com.intellij.modules.pycharm</incompatible-with>
+  <incompatible-with>com.intellij.modules.python</incompatible-with>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <fileType
+        name="Edge"
+        implementationClass="com.adonis.ide.EdgeFileType"
+        fieldName="INSTANCE"
+        language="Edge"
+        extensions="edge"
+        patterns="*.edge"/>
+
+    <fileTypeOverrider implementation="com.adonis.ide.EdgeFileTypeOverrider"/>
+    <fileTypeDetector implementation="com.adonis.ide.EdgeFileTypeDetector" order="first"/>
+
+    <lang.parserDefinition language="Edge" implementationClass="com.adonis.ide.EdgeParserDefinition"/>
+    <lang.fileViewProviderFactory language="Edge" implementationClass="com.adonis.ide.EdgeFileViewProviderFactory"/>
+
+    <lang.syntaxHighlighterFactory language="Edge" implementationClass="com.adonis.ide.EdgeSyntaxHighlighterFactory"/>
+    <editorHighlighterProvider filetype="Edge" implementationClass="com.adonis.ide.EdgeEditorHighlighterProvider"/>
+
+    <typedHandler implementation="com.adonis.ide.EdgeTypedHandler"/>
+    <lang.braceMatcher language="Edge" implementationClass="com.adonis.ide.EdgeBraceMatcher"/>
+
+    <configurationType implementation="com.adonis.ide.AceConfigurationType"/>
+
+    <completion.contributor language="any" implementationClass="com.adonis.ide.AdonisCompletionContributor"/>
+    <annotator language="any" implementationClass="com.adonis.ide.AdonisAnnotator"/>
+    <annotator language="Edge" implementationClass="com.adonis.ide.AdonisEdgeStructureAnnotator"/>
+    <lang.documentationProvider language="any" implementationClass="com.adonis.ide.AdonisDocumentationProvider"/>
+    <intentionAction>
+      <language>any</language>
+      <className>com.adonis.ide.AdonisCreateViewIntention</className>
+      <category>Adonis</category>
+    </intentionAction>
+    <intentionAction>
+      <language>any</language>
+      <className>com.adonis.ide.AdonisAceMakeIntention</className>
+      <category>Adonis</category>
+    </intentionAction>
+    <intentionAction>
+      <language>Edge</language>
+      <className>com.adonis.ide.AdonisExtractPartialIntention</className>
+      <category>Adonis</category>
+    </intentionAction>
+    <intentionAction>
+      <language>Edge</language>
+      <className>com.adonis.ide.AdonisIncludeToComponentIntention</className>
+      <category>Adonis</category>
+    </intentionAction>
+    <intentionAction>
+      <language>any</language>
+      <className>com.adonis.ide.AdonisInsertRelationStubIntention</className>
+      <category>Adonis</category>
+    </intentionAction>
+    <gotoDeclarationHandler implementation="com.adonis.ide.AdonisGotoDeclarationHandler"/>
+    <psi.referenceContributor implementation="com.adonis.ide.AdonisReferenceContributor"/>
+    <findUsagesHandlerFactory implementation="com.adonis.ide.AdonisFindUsagesHandlerFactory"/>
+    <referencesSearchQueryExecutor implementation="com.adonis.ide.AdonisReferencesSearchExecutor"/>
+    <renamePsiElementProcessor implementation="com.adonis.ide.AdonisRenameProcessor"/>
+    <toolWindow
+        id="Adonis"
+        anchor="right"
+        icon="/icons/adonis.svg"
+        factoryClass="com.adonis.ide.AdonisToolWindowFactory"/>
+  </extensions>
+
+  <actions>
+    <group id="Adonis.Menu"
+           text="Adonis"
+           description="Adonis Idea"
+           icon="/icons/adonis.svg"
+           popup="true">
+      <add-to-group group-id="MainMenu" anchor="before" relative-to-action="HelpMenu"/>
+      <add-to-group group-id="ToolsMenu" anchor="last"/>
+      <action id="Adonis.RebuildIndex"
+              class="com.adonis.ide.RebuildIndexAction"
+              text="Rebuild Index"
+              description="Rebuild the Adonis symbol index (bundled Node indexer)"
+              icon="/icons/adonis.svg"/>
+      <separator/>
+      <group id="Adonis.New"
+             class="com.adonis.ide.AdonisMakeActionGroup"
+             text="New…"
+             description="Generate Adonis classes via node ace make:*"
+             popup="true">
+        <add-to-group group-id="NewGroup" anchor="last"/>
+      </group>
+    </group>
+  </actions>
+
+  <applicationListeners>
+    <listener
+        class="com.adonis.ide.AdonisPluginListener"
+        topic="com.intellij.ide.plugins.DynamicPluginListener"/>
+    <listener
+        class="com.adonis.ide.AdonisIndexWatcher"
+        topic="com.intellij.openapi.project.ProjectManagerListener"/>
+  </applicationListeners>
+</idea-plugin>

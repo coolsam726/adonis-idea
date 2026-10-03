@@ -1,0 +1,13 @@
+name: Feature request
+description: A concrete change you want shipped.
+title: "feat: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: textarea
+    id: request
+    attributes:
+      label: Request
+      description: What should exist, and why. API sketch welcome. Use Idea for half-baked thoughts; RFC for large design.
+      render: markdown
+    validations:
+      required: true

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Editor setup docs
+    url: https://docs.adonis.com/editor-setup/
+    about: Read the docs before filing — many answers are already there.
+  - name: Discussions
+    url: https://github.com/adonis-dev/adonis-idea/discussions
+    about: Questions and open chat (not the bug tracker).
+  - name: Adonis org
+    url: https://github.com/adonis-dev
+    about: Other first-party packages.

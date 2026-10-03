@@ -1,0 +1,19 @@
+name: Bug report
+description: Something isn't working in the editor plugin.
+title: "bug: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version
+      description: Marketplace / build version
+    validations:
+      required: true
+  - type: textarea
+    id: bug
+    attributes:
+      label: Bug
+      description: What you did, what happened, what you expected. IDE version if relevant.
+    validations:
+      required: true

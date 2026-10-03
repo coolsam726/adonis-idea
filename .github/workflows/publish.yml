@@ -1,0 +1,78 @@
+name: Publish
+
+# Cutting a release: publish a GitHub Release on a vX.Y.Z tag.
+# Rehearsing: Actions → Publish → Run workflow → dry_run: true.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build artifact only (skip Marketplace)
+        type: boolean
+        default: true
+      version:
+        description: Version without v prefix (workflow_dispatch only; release uses tag)
+        type: string
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Build + publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "release" ]; then
+            RAW="${{ github.event.release.tag_name }}"
+          else
+            RAW="${{ inputs.version }}"
+            if [ -z "$RAW" ]; then
+              RAW=$(grep '^pluginVersion' gradle.properties | cut -d= -f2 | tr -d ' ')
+            fi
+          fi
+          VERSION="${RAW#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION"
+
+      - name: Align plugin version
+        run: |
+          sed -i "s/^pluginVersion = .*/pluginVersion = ${{ steps.ver.outputs.version }}/" gradle.properties
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - run: ./gradlew test buildPlugin --no-daemon
+
+      - name: Upload release assets
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          gh release upload "$TAG" build/distributions/*.zip --clobber
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: adonis-idea-${{ steps.ver.outputs.version }}
+          path: build/distributions/*.zip
+
+      - name: Publish to JetBrains Marketplace
+        if: github.event_name == 'release' || inputs.dry_run == false
+        env:
+          JETBRAINS_PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+        run: |
+          if [ -z "$JETBRAINS_PUBLISH_TOKEN" ]; then
+            echo "JETBRAINS_PUBLISH_TOKEN secret is not set" >&2
+            exit 1
+          fi
+          ./gradlew publishPlugin --no-daemon
