@@ -1,7 +1,7 @@
 # Adonis Idea — feature parity matrix
 
 Maps **Laravel IDEA** feature categories and **almasix-idea** surfaces onto
-Adonis Idea. Status as of **0.3.1**.
+Adonis Idea. Status as of **0.3.2**.
 
 Legend: **full** = shipped · **partial** = useful MVP · **planned** = not yet
 

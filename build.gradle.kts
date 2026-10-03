@@ -66,6 +66,9 @@ intellijPlatform {
         changeNotes.set(
             """
             <ul>
+              <li>0.3.2 — Reliable <code>@</code> directive autopopup; detection-gated
+                  <code>@wire</code>/<code>@persist</code>; never wait on the Node
+                  indexer under a ReadAction.</li>
               <li>0.3.1 — Fix dark-theme Adonis icons; non-blocking index rebuild;
                   <code>@</code> autopopup; <code>@form</code> no longer steals HTML
                   <code>&lt;form&gt;</code>; regression guards in CI.</li>

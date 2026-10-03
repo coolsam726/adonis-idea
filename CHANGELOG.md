@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2
+
+- Fix `@` directive autopopup (schedule from `checkAutoPopup` + never skip via HTML confidence)
+- Detection-gate `@wire` / `@persist` until Wire is present (`framework.wire`)
+- Never wait on the Node indexer under a ReadAction (refs / highlighting)
+
 ## 0.3.1
 
 - Fix blank Adonis tool-window / `*.edge` icons in dark UI (invalid dark SVG)
