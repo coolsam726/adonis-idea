@@ -22,6 +22,34 @@ class CallSiteDetectorTest {
     }
 
     @Test
+    fun viewRenderCall() {
+        val site = CallSiteDetector.detect("""return view.render('pages/auth/sign""")
+        assertNotNull(site)
+        assertEquals(SymbolKind.VIEW, site!!.kind)
+        assertEquals("pages/auth/sign", site.prefix)
+    }
+
+    @Test
+    fun ctxViewRenderCall() {
+        val site = CallSiteDetector.detect("""ctx.view.render('pages/ho""")
+        assertEquals(SymbolKind.VIEW, site!!.kind)
+        assertEquals("pages/ho", site.prefix)
+    }
+
+    @Test
+    fun viewRenderSyncCall() {
+        val site = CallSiteDetector.detect("""view.renderSync('emails/welcome""")
+        assertEquals(SymbolKind.VIEW, site!!.kind)
+        assertEquals("emails/welcome", site.prefix)
+    }
+
+    @Test
+    fun bareRenderStillInertia() {
+        val site = CallSiteDetector.detect("""render('Dash""")
+        assertEquals(SymbolKind.INERTIA, site!!.kind)
+    }
+
+    @Test
     fun configCall() {
         val site = CallSiteDetector.detect("""config("app.na""")
         assertEquals(SymbolKind.CONFIG, site!!.kind)
