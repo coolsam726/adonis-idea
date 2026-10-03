@@ -54,6 +54,7 @@
 
     <lang.syntaxHighlighterFactory language="Edge" implementationClass="com.adonis.ide.EdgeSyntaxHighlighterFactory"/>
     <editorHighlighterProvider filetype="Edge" implementationClass="com.adonis.ide.EdgeEditorHighlighterProvider"/>
+    <colorSettingsPage implementation="com.adonis.ide.EdgeColorSettingsPage"/>
 
     <typedHandler implementation="com.adonis.ide.EdgeTypedHandler"/>
     <lang.braceMatcher language="Edge" implementationClass="com.adonis.ide.EdgeBraceMatcher"/>

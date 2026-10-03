@@ -85,4 +85,20 @@ class EdgeLexerTest {
             tokens("@notARealDirective"),
         )
     }
+
+    @Test
+    fun `dotted layout tags are directives`() {
+        assertEquals(
+            listOf(EdgeTokens.DIRECTIVE to "@layouts.app({ title: 'Dashboard' })"),
+            tokens("@layouts.app({ title: 'Dashboard' })"),
+        )
+    }
+
+    @Test
+    fun `page slot directive is recognized`() {
+        assertEquals(
+            listOf(EdgeTokens.DIRECTIVE to "@page()"),
+            tokens("@page()"),
+        )
+    }
 }

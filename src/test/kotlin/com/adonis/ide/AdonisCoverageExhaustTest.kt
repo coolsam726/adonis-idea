@@ -214,6 +214,8 @@ class AdonisCoverageExhaustTest {
         assertTrue(kind(SymbolKind.ACE).contains("serve" to "ace"))
         assertTrue(kind(SymbolKind.VITE).any { it.second == "asset" })
         assertTrue(kind(SymbolKind.DIRECTIVE).contains("if" to "directive"))
+        assertTrue(kind(SymbolKind.DIRECTIVE).any { it.first == "each" && it.second == "loop" })
+        assertTrue(kind(SymbolKind.DIRECTIVE).any { it.first == "loop" })
         assertTrue(kind(SymbolKind.TEMPLATE_VAR).any { it.first == "title" })
         assertTrue(kind(SymbolKind.CONTROLLER_ACTION).contains("index" to "action"))
         assertTrue(AdonisCompletionCatalog.columnsFor(index, "User").contains("email"))

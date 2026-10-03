@@ -89,6 +89,7 @@ function detectOrm(pkg, base) {
 
 function indexViews(base) {
   const views = {}
+  const components = {}
   const roots = [
     join(base, 'resources', 'views'),
     join(base, 'resources', 'views', 'wire'),
@@ -102,9 +103,19 @@ function indexViews(base) {
       views[name] = file
       // dotted + slash forms
       views[rel.replace(/\.edge$/, '')] = file
+      // Tag components: @layouts.app, @components.button, @page (via components map)
+      if (
+        name.startsWith('components.') ||
+        name.startsWith('layouts.') ||
+        name.startsWith('partials.')
+      ) {
+        components[name] = file
+        const short = name.replace(/^(components|layouts|partials)\./, '')
+        if (short && !components[short]) components[short] = file
+      }
     }
   }
-  return views
+  return { views, components }
 }
 
 function indexRoutes(base) {
@@ -155,33 +166,104 @@ function indexRoutes(base) {
   return routes
 }
 
+function ensureEnvKey(envKeys, name, patch = {}) {
+  const cur = envKeys[name] || {
+    path: null,
+    line: 0,
+    kind: 'env',
+    detail: '',
+    used_by: [],
+  }
+  const used = new Set(cur.used_by || [])
+  for (const u of patch.used_by || []) used.add(u)
+  envKeys[name] = {
+    path: patch.path != null ? patch.path : cur.path,
+    line: patch.line != null ? patch.line : cur.line,
+    kind: patch.kind || cur.kind,
+    detail: patch.detail || cur.detail,
+    used_by: [...used],
+  }
+}
+
 function indexEnv(base) {
   const envKeys = {}
   const envOptions = {}
-  for (const name of ['.env', '.env.example', '.env.local']) {
+
+  // 1) Declarations in dotenv files (0-based lines for OpenFileDescriptor).
+  for (const name of ['.env', '.env.example', '.env.local', '.env.test']) {
     const file = join(base, name)
     if (!existsSync(file)) continue
     const text = read(file)
     text.split(/\r?\n/).forEach((line, idx) => {
       const m = line.match(/^\s*([A-Z][A-Z0-9_]*)\s*=(.*)$/)
       if (!m) return
-      envKeys[m[1]] = {
+      // Prefer .env over .env.example for navigation target.
+      const existing = envKeys[m[1]]
+      if (existing?.path && name !== '.env' && existing.detail === '.env') {
+        return
+      }
+      ensureEnvKey(envKeys, m[1], {
         path: file,
-        line: idx + 1,
+        line: idx,
         kind: 'env',
         detail: name,
-        used_by: [],
-      }
+      })
     })
   }
-  // Common Adonis options
+
+  // 2) Schema keys from start/env.ts (Env.create / Env.schema).
+  for (const rel of ['start/env.ts', 'start/env.js']) {
+    const file = join(base, rel)
+    if (!existsSync(file)) continue
+    const text = read(file)
+    const schemaRe =
+      /^\s*([A-Z][A-Z0-9_]*)\s*:\s*Env\.schema\./gm
+    let m
+    while ((m = schemaRe.exec(text))) {
+      const key = m[1]
+      const already = envKeys[key]
+      ensureEnvKey(envKeys, key, {
+        path: already?.path || file,
+        line: already?.path ? already.line : Math.max(0, lineOf(text, m.index) - 1),
+        kind: already?.kind === 'env' ? 'env' : 'schema',
+        detail: already?.detail || 'start/env',
+        used_by: [`${rel}:${lineOf(text, m.index)}`],
+      })
+    }
+  }
+
+  // 3) Usages in app / config / start — env.get / Env.get / process.env.
+  const usageDirs = ['config', 'start', 'app', 'database']
+  const usageRe =
+    /(?:(?:env|Env)\.get\s*\(\s*['"]([A-Z][A-Z0-9_]*)['"]|process\.env\.([A-Z][A-Z0-9_]*))/g
+  for (const dirName of usageDirs) {
+    const dir = join(base, dirName)
+    for (const file of walk(dir, (p) => /\.(ts|js|mjs|cjs)$/.test(p))) {
+      const text = read(file)
+      const rel = relative(base, file).replace(/\\/g, '/')
+      let m
+      usageRe.lastIndex = 0
+      while ((m = usageRe.exec(text))) {
+        const key = m[1] || m[2]
+        if (!key) continue
+        ensureEnvKey(envKeys, key, {
+          kind: envKeys[key]?.kind || 'code',
+          detail: envKeys[key]?.detail || 'code',
+          used_by: [`${rel}:${lineOf(text, m.index)}`],
+        })
+      }
+    }
+  }
+
+  // Common Adonis option catalogs (completion for env.get second arg / .env values).
   Object.assign(envOptions, {
     NODE_ENV: ['development', 'production', 'test'],
-    SESSION_DRIVER: ['cookie', 'memory', 'redis'],
+    SESSION_DRIVER: ['cookie', 'memory', 'redis', 'database'],
     CACHE_STORE: ['memory', 'redis', 'file'],
     QUEUE_CONNECTION: ['redis', 'database', 'memory'],
     DRIVE_DISK: ['fs', 's3', 'gcs'],
     DB_CONNECTION: ['pg', 'mysql', 'sqlite', 'mssql', 'libsql'],
+    LOG_LEVEL: ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'],
   })
   return { envKeys, envOptions }
 }
@@ -539,7 +621,7 @@ function indexAceCommands(base) {
 const EDGE_DIRECTIVES = [
   'if', 'elseif', 'else', 'unless', 'each', 'component', 'slot', 'include',
   'inject', 'eval', 'let', 'assign', 'vite', 'stack', 'pushTo', 'svg',
-  'debugger', 'newError', 'section', 'layout', '!component',
+  'debugger', 'newError', 'section', 'layout', 'page',
   // Shamar / Wire tags (always known to lexer; completions gated elsewhere)
   'wire', 'persist', 'end',
 ]
@@ -586,7 +668,7 @@ function build() {
   }
 
   // Add shamar:: / wire:: view aliases when present
-  const views = indexViews(root)
+  const { views, components } = indexViews(root)
   if (existsSync(join(root, 'node_modules', '@shamar', 'adonis', 'resources', 'views', 'shamar'))) {
     const shamarViews = join(root, 'node_modules', '@shamar', 'adonis', 'resources', 'views', 'shamar')
     for (const file of walk(shamarViews, (p) => p.endsWith('.edge'))) {
@@ -619,7 +701,7 @@ function build() {
     model_metadata: models,
     relations,
     casts: ['string', 'number', 'boolean', 'date', 'datetime', 'json'],
-    components: {},
+    components,
     gates: [],
     disks: envOptions.DRIVE_DISK || ['fs', 's3'],
     queues: ['redis', 'database', 'memory'],

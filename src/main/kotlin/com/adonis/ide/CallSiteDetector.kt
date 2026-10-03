@@ -63,7 +63,10 @@ object CallSiteDetector {
         """@!?(?<dir>include|includeIf|includeWhen|includeUnless|each|component|wire|layout|section|svg|vite|extends|lang|choice|can|cannot|canany|cannotany|route|signedRoute|asset)\s*\(\s*(?:\[\s*)?(?<q>['"])(?<pre>[^'"]*)\z""",
     )
 
-    private val AT_DIRECTIVE = Regex("""@!?(?<pre>[A-Za-z_][\w]*)?\z""")
+    /** `@`, `@ea`, `@each`, `@layouts.app` (prefix may be empty or dotted). */
+    private val AT_DIRECTIVE = Regex(
+        """@!?(?<pre>[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*)?\z""",
+    )
 
     private val COMPONENT_TAG = Regex("""<x-(?<pre>[\w./-]*)\z""")
 
@@ -172,9 +175,17 @@ object CallSiteDetector {
         RegexOption.IGNORE_CASE,
     )
 
-    private val COLUMN_FN_SET = COLUMN_FNS.split('|').map { it.lowercase() }.toSet()
-    private val RELATION_FN_SET = RELATION_FNS.split('|').map { it.lowercase() }.toSet()
     private val CALL_MATCHERS = listOf(METHOD_CALL, CHAINED_CALL, GLOBAL_CALL)
+
+    /** Relation / column query helpers → kind (built once; avoids unused-init coverage gaps). */
+    private val QUERY_FN_KINDS: Map<String, SymbolKind> = buildMap {
+        for (part in RELATION_FNS.lowercase().split('|')) {
+            put(part, SymbolKind.RELATION)
+        }
+        for (part in COLUMN_FNS.lowercase().split('|')) {
+            putIfAbsent(part, SymbolKind.COLUMN)
+        }
+    }
 
     private fun kindForCall(fn: String, receiver: String?): SymbolKind? {
         val name = fn.lowercase()
@@ -196,11 +207,7 @@ object CallSiteDetector {
             "table" -> SymbolKind.TABLE
             "vite", "asset", "url" -> SymbolKind.VITE
             "ace" -> SymbolKind.ACE
-            else -> when {
-                name in RELATION_FN_SET -> SymbolKind.RELATION
-                name in COLUMN_FN_SET -> SymbolKind.COLUMN
-                else -> null
-            }
+            else -> QUERY_FN_KINDS[name]
         }
     }
 

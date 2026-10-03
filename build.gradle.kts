@@ -109,6 +109,8 @@ kover {
                     "com.adonis.ide.EdgeBraceMatcher",
                     "com.adonis.ide.EdgeTypedHandler",
                     "com.adonis.ide.EdgeSyntaxHighlighter*",
+                    "com.adonis.ide.EdgeColorSettingsPage",
+                    "com.adonis.ide.EdgeColorSettingsPage*",
                     "com.adonis.ide.AdonisPluginListener",
                     "com.adonis.ide.AdonisIndexWatcher",
                     "com.adonis.ide.AdonisIndexWatcher$*",

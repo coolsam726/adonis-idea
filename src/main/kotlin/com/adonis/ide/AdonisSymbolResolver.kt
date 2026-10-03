@@ -30,8 +30,11 @@ object AdonisSymbolResolver {
             SymbolKind.CONFIG -> resolveConfig(index, name)
             SymbolKind.ENV -> {
                 val entry = index.envKeys[name] ?: return null
-                entry.path?.let { return Target(it, entry.line) }
-                // Config-only key: jump to first env() usage site (config/app.py:18).
+                entry.path?.let { path ->
+                    // Indexer stores 0-based lines for .env / start/env.ts.
+                    return Target(path, entry.line.coerceAtLeast(0))
+                }
+                // Schema/code-only key: jump to first usage site (`config/database.ts:12`).
                 val origin = entry.usedBy.firstOrNull() ?: return null
                 return parseUsedBy(index.basePath, origin)
             }

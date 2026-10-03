@@ -93,6 +93,12 @@ class AdonisEdgeStructureTest {
         assertTrue(
             AdonisEdgeStructure.analyze("@each(user in users)\n{{ user }}\n@end").isEmpty(),
         )
+        assertTrue(
+            AdonisEdgeStructure.analyze(
+                "@layouts.app({ title: 'Dashboard' })\n@page()\nx\n@end\n@end",
+            ).isEmpty(),
+        )
+        assertTrue(AdonisEdgeStructure.analyze("@!component('alert')").isEmpty())
     }
 
     @Test
