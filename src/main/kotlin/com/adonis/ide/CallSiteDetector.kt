@@ -138,8 +138,9 @@ object CallSiteDetector {
         """(?:auth\s*\(\s*\)(?:\s*\.\s*(?:use|guard)\s*\([^)]*\))?\s*\.\s*user\s*(?:\(\s*\))?|request\s*\.\s*user\s*(?:\(\s*\))?|(?<recv>[A-Za-z_][\w]*))\.(?<pre>[A-Za-z_][\w]*)?\z""",
     )
 
+    /** ``[controllers.Session, 'store`` / ``[SessionController, "create``. */
     private val CONTROLLER_ACTION = Regex(
-        """\[\s*[A-Za-z_][\w.]*\s*,\s*(?<q>['"])(?<pre>[^'"]*)\z""",
+        """\[\s*(?<ctrl>[A-Za-z_][\w.]*)\s*,\s*(?<q>['"])(?<pre>[^'"]*)\z""",
     )
 
     private val ACE = Regex(
@@ -297,7 +298,11 @@ object CallSiteDetector {
             )
         }
         CONTROLLER_ACTION.find(tail)?.let {
-            return Site(SymbolKind.CONTROLLER_ACTION, it.groups["pre"]?.value ?: "")
+            return Site(
+                SymbolKind.CONTROLLER_ACTION,
+                it.groups["pre"]?.value ?: "",
+                receiver = it.groups["ctrl"]?.value,
+            )
         }
         ACE.find(tail)?.let {
             return Site(SymbolKind.ACE, it.groups["pre"]?.value ?: "")

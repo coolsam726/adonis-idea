@@ -54,7 +54,14 @@ object AdonisNavigation {
         val isEdge = name.endsWith(".edge") || language === EdgeLanguage
         val isPython = name.endsWith(".py")
         val isEnv = name == ".env" || name.startsWith(".env.")
-        return isEdge || isPython || isEnv
+        val isJs =
+            name.endsWith(".ts") ||
+                name.endsWith(".tsx") ||
+                name.endsWith(".js") ||
+                name.endsWith(".jsx") ||
+                name.endsWith(".mjs") ||
+                name.endsWith(".cjs")
+        return isEdge || isPython || isEnv || isJs
     }
 
     fun navigationElement(project: Project, target: AdonisSymbolResolver.Target): PsiElement? {

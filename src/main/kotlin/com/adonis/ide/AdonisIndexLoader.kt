@@ -111,6 +111,15 @@ object AdonisIndexLoader {
             controllerActions[name] = value.asJsonArray.map { it.asString }
         }
 
+        val controllerLocations = mutableMapOf<String, AdonisIndex.Located>()
+        root.getAsJsonObject("controller_locations")?.entrySet()?.forEach { (name, value) ->
+            val obj = value.asJsonObject
+            controllerLocations[name] = AdonisIndex.Located(
+                path = stringOrNull(obj, "path"),
+                line = obj.get("line")?.asInt ?: 0,
+            )
+        }
+
         val envKeys = mutableMapOf<String, AdonisIndex.EnvEntry>()
         root.getAsJsonObject("env_keys")?.entrySet()?.forEach { (name, value) ->
             val obj = value.asJsonObject
@@ -197,6 +206,7 @@ object AdonisIndexLoader {
             viewData = viewData,
             viteEntries = stringMap(root, "vite_entries"),
             controllerActions = controllerActions,
+            controllerLocations = controllerLocations,
             wireComponents = wireComponents,
             shamar = shamar,
         )

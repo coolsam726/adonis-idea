@@ -331,22 +331,57 @@ function pluralize(s) {
   return s + 's'
 }
 
+const CONTROLLER_METHOD_SKIP = new Set([
+  'constructor',
+  'get',
+  'set',
+  'if',
+  'else',
+  'for',
+  'while',
+  'switch',
+  'catch',
+  'try',
+  'do',
+  'return',
+  'typeof',
+  'instanceof',
+  'new',
+  'await',
+  'yield',
+  'case',
+  'default',
+  'function',
+  'class',
+])
+
 function indexControllers(base) {
   const controllers = {}
+  const locations = {}
   const dir = join(base, 'app', 'controllers')
   for (const file of walk(dir, (p) => /\.(ts|js)$/.test(p))) {
     const text = read(file)
     const classMatch = text.match(/export\s+default\s+class\s+(\w+)/)
     const name = classMatch?.[1] || basename(file).replace(/\.(ts|js)$/, '')
+    const classLine = classMatch ? lineOf(text, classMatch.index) : 1
     const actions = []
-    const re = /(?:async\s+)?([a-zA-Z_]\w*)\s*\([^)]*\)\s*(?::\s*[^{]+)?\s*\{/g
+    // Class methods are indented; skips top-level helpers and control-flow `if (`.
+    const re = /^\s+(?:async\s+)?([a-zA-Z_]\w*)\s*\([^)]*\)\s*(?::\s*[^{]+)?\s*\{/gm
     let m
     while ((m = re.exec(text))) {
-      if (!['constructor', 'get', 'set'].includes(m[1])) actions.push(m[1])
+      const action = m[1]
+      if (CONTROLLER_METHOD_SKIP.has(action)) continue
+      actions.push(action)
+      // 0-based lines for OpenFileDescriptor / AdonisSymbolResolver.Target
+      locations[`${name}@${action}`] = {
+        path: file,
+        line: Math.max(0, lineOf(text, m.index) - 1),
+      }
     }
     controllers[name] = [...new Set(actions)]
+    locations[name] = { path: file, line: Math.max(0, classLine - 1) }
   }
-  return controllers
+  return { actions: controllers, locations }
 }
 
 function indexWire(base) {
@@ -525,6 +560,7 @@ function build() {
   const { models, tables, relations } = indexModels(root, orm)
   const shamarIndex = indexShamar(root, shamar)
   const routes = indexRoutes(root)
+  const controllers = indexControllers(root)
 
   // Inject convention Shamar route names
   if (shamar || shamarIndex.panels.length) {
@@ -597,7 +633,8 @@ function build() {
     view_shared: {},
     view_data: {},
     vite_entries: indexVite(root),
-    controller_actions: indexControllers(root),
+    controller_actions: controllers.actions,
+    controller_locations: controllers.locations,
     wire_components: indexWire(root),
     shamar: shamarIndex,
   }

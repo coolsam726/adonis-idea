@@ -45,6 +45,11 @@ data class AdonisIndex(
     val viewData: Map<String, Map<String, ViewVarEntry>> = emptyMap(),
     val viteEntries: Map<String, String> = emptyMap(),
     val controllerActions: Map<String, List<String>> = emptyMap(),
+    /**
+     * Controller class or `Class@action` → declaration location.
+     * Keys use the exported class name (`SessionController`, `SessionController@store`).
+     */
+    val controllerLocations: Map<String, Located> = emptyMap(),
     /** Wire component name → class path / view / props / methods. */
     val wireComponents: Map<String, WireEntry> = emptyMap(),
     val shamar: ShamarEntry = ShamarEntry(),
@@ -223,6 +228,25 @@ data class AdonisIndex(
             entry.path?.replace('\\', '/') == normalized ||
                 entry.view?.replace('\\', '/') == normalized
         }?.key
+    }
+
+    /**
+     * Map a route-tuple receiver (`controllers.Session`, `Session`, `SessionController`)
+     * to the indexed controller class name.
+     */
+    fun resolveControllerName(receiver: String?): String? {
+        if (receiver.isNullOrBlank()) return null
+        val simple = receiver.substringAfterLast('.').trim()
+        if (simple.isEmpty()) return null
+        if (controllerActions.containsKey(simple)) return simple
+        val asController =
+            if (simple.endsWith("Controller")) simple else "${simple}Controller"
+        if (controllerActions.containsKey(asController)) return asController
+        return controllerActions.keys.firstOrNull { key ->
+            key.equals(simple, ignoreCase = true) ||
+                key.equals(asController, ignoreCase = true) ||
+                key.removeSuffix("Controller").equals(simple, ignoreCase = true)
+        }
     }
 
     companion object {
