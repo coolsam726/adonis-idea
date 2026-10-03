@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1
+
+- Fix blank Adonis tool-window / `*.edge` icons in dark UI (invalid dark SVG)
+- Rebuild Index no longer blocks the EDT (background task + deferred cold index)
+- Typing `@` auto-opens directive completion again; `@form` no longer steals HTML `<form>`
+- Regression guards: `EdgeRegressionGuardTest` + CI `scripts/check-regression-guards.py`
+
 ## 0.3.0
 
 - EdgeJS guide fidelity: lex/complete arbitrary `@form` / `@!button` tag components
