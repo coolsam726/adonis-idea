@@ -103,7 +103,7 @@
     <toolWindow
         id="Adonis"
         anchor="right"
-        icon="/icons/adonis.svg"
+        icon="/icons/adonisToolWindow.svg"
         factoryClass="dev.shamar.adonis.ide.AdonisToolWindowFactory"/>
   </extensions>
 

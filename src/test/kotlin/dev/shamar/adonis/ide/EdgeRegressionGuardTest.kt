@@ -37,8 +37,8 @@ class EdgeRegressionGuardTest : BasePlatformTestCase() {
             val doc = parseXml(bytes)
             assertNotNull("REGRESSION(icons): $path is not well-formed XML", doc)
         }
-        assertSame(
-            "REGRESSION(icons): tool-window icon must reuse AdonisIcons.File",
+        assertNotSame(
+            "REGRESSION(icons): tool-window icon must be monochrome, not AdonisIcons.File",
             AdonisIcons.File,
             AdonisIcons.ToolWindow,
         )
@@ -46,6 +46,18 @@ class EdgeRegressionGuardTest : BasePlatformTestCase() {
             "REGRESSION(icons): EdgeFileType must expose Adonis brand icon",
             AdonisIcons.File,
             EdgeFileType.INSTANCE.icon,
+        )
+        val twSvg = javaClass.classLoader.getResourceAsStream("icons/adonisToolWindow.svg")
+            ?: AdonisIcons::class.java.classLoader.getResourceAsStream("icons/adonisToolWindow.svg")
+        assertNotNull("REGRESSION(icons): missing adonisToolWindow.svg", twSvg)
+        val twText = twSvg!!.bufferedReader().readText()
+        assertTrue(
+            "REGRESSION(icons): tool-window SVG must use #6C707E for New UI recolor",
+            twText.contains("#6C707E"),
+        )
+        assertFalse(
+            "REGRESSION(icons): tool-window SVG must not use brand purple",
+            twText.contains("#5943FF"),
         )
     }
 

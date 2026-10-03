@@ -22,6 +22,31 @@ def err(msg: str) -> None:
     ERRORS.append(msg)
 
 
+def check_toolwindow_icon() -> None:
+    """Tool-window icons must be monochrome gray so New UI can recolor them."""
+    tw = ROOT / "src/main/resources/icons/adonisToolWindow.svg"
+    if not tw.is_file():
+        err("REGRESSION(icons): missing icons/adonisToolWindow.svg")
+        return
+    text = tw.read_text(encoding="utf-8")
+    if "#5943FF" in text or "fill=\"#FFFFFF\"" in text or "fill='#FFFFFF'" in text:
+        err(
+            "REGRESSION(icons): adonisToolWindow.svg must be monochrome gray "
+            "(not brand purple/white) so selected state paints blue"
+        )
+    if "#6C707E" not in text:
+        err(
+            "REGRESSION(icons): adonisToolWindow.svg should use JetBrains gray "
+            "#6C707E for New UI recoloring"
+        )
+    xml = read("src/main/resources/META-INF/plugin.xml")
+    if 'icon="/icons/adonisToolWindow.svg"' not in xml:
+        err("REGRESSION(icons): toolWindow must use /icons/adonisToolWindow.svg")
+    icons_kt = read("src/main/kotlin/icons/AdonisIcons.kt")
+    if "adonisToolWindow.svg" not in icons_kt:
+        err("REGRESSION(icons): AdonisIcons.ToolWindow must load adonisToolWindow.svg")
+
+
 def check_svgs() -> None:
     roots = [
         ROOT / "src/main/resources/icons",
@@ -189,6 +214,7 @@ def check_plugin_xml() -> None:
 
 def main() -> int:
     check_svgs()
+    check_toolwindow_icon()
     check_edt_contracts()
     check_form_contracts()
     check_plugin_xml()

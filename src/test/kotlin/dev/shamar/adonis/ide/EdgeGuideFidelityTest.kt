@@ -199,7 +199,11 @@ class EdgeGuideFidelityTest : BasePlatformTestCase() {
                 .newDocumentBuilder()
                 .parse(java.io.ByteArrayInputStream(bytes))
         }
-        assertSame(AdonisIcons.File, AdonisIcons.ToolWindow)
+        assertNotSame(
+            "Tool-window icon must be monochrome (not the brand file icon)",
+            AdonisIcons.File,
+            AdonisIcons.ToolWindow,
+        )
     }
 
     fun `test raw echo has distinct color key`() {
