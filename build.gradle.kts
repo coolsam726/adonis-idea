@@ -66,6 +66,9 @@ intellijPlatform {
         changeNotes.set(
             """
             <ul>
+              <li>0.3.1 — Fix dark-theme Adonis icons; non-blocking index rebuild;
+                  <code>@</code> autopopup; <code>@form</code> no longer steals HTML
+                  <code>&lt;form&gt;</code>; regression guards in CI.</li>
               <li>0.3.0 — EdgeJS guide fidelity: arbitrary <code>@form</code> /
                   <code>@!button</code> tag components; object props
                   (<code>route</code>/<code>method</code>/starter-kit keys);
