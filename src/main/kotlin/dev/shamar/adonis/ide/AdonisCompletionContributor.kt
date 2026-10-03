@@ -51,7 +51,10 @@ class AdonisCompletionContributor : CompletionContributor() {
                         return
                     }
 
-                    if (!index.ok && index.views.isEmpty() && index.routes.isEmpty()) {
+                    // Prop keys / method|variant literals work without a warm index.
+                    val indexOptional = site?.kind == SymbolKind.EDGE_PROP_KEY ||
+                        site?.kind == SymbolKind.EDGE_LITERAL
+                    if (!indexOptional && !index.ok && index.views.isEmpty() && index.routes.isEmpty()) {
                         return
                     }
 

@@ -189,7 +189,7 @@ data class AdonisIndex(
         SymbolKind.SHAMAR_COLUMN -> shamar.columnTypes.contains(name)
         SymbolKind.SHAMAR_NAV -> shamar.navGroups.contains(name)
         SymbolKind.COLUMN, SymbolKind.RELATION, SymbolKind.DIRECTIVE, SymbolKind.ATTR,
-        SymbolKind.MODEL_ATTR -> true
+        SymbolKind.MODEL_ATTR, SymbolKind.EDGE_LITERAL, SymbolKind.EDGE_PROP_KEY -> true
     }
 
     fun templateVarNames(): Set<String> =
@@ -273,4 +273,8 @@ enum class SymbolKind {
     SHAMAR_FIELD,
     SHAMAR_COLUMN,
     SHAMAR_NAV,
+    /** Fixed Edge / starter-kit string literals (`method`, `variant`, …). */
+    EDGE_LITERAL,
+    /** Object-literal prop keys inside `@tag({ | })`. Receiver = tag name. */
+    EDGE_PROP_KEY,
 }

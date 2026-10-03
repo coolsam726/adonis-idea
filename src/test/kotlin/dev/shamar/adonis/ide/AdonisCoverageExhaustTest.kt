@@ -219,6 +219,8 @@ class AdonisCoverageExhaustTest {
         assertTrue(kind(SymbolKind.DIRECTIVE).any { it.first == "!component" })
         assertTrue(kind(SymbolKind.TEMPLATE_VAR).any { it.first == "title" })
         assertTrue(kind(SymbolKind.CONTROLLER_ACTION).contains("index" to "action"))
+        assertTrue(kind(SymbolKind.EDGE_LITERAL, "method").any { it.first == "POST" })
+        assertTrue(kind(SymbolKind.EDGE_PROP_KEY, "form").any { it.first == "route" })
         assertTrue(AdonisCompletionCatalog.columnsFor(index, "User").contains("email"))
         assertTrue(AdonisCompletionCatalog.relationsFor(index, "User").contains("posts"))
     }

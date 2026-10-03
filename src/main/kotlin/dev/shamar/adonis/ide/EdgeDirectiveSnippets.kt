@@ -115,6 +115,21 @@ object EdgeDirectiveSnippets {
                 t.addTextSegment(")")
             }
         },
+        "each.index" to Spec(
+            name = "each",
+            detail = "loop",
+            presentable = "each((item, index) in items) … @end",
+        ) { m ->
+            block(m, "each_index") { t ->
+                t.addTextSegment("each((")
+                t.addVariable("ITEM", ConstantNode("item"), true)
+                t.addTextSegment(", ")
+                t.addVariable("INDEX", ConstantNode("index"), true)
+                t.addTextSegment(") in ")
+                t.addVariable("ITEMS", ConstantNode("items"), true)
+                t.addTextSegment(")")
+            }
+        },
         "if" to Spec(
             name = "if",
             detail = "if",
@@ -173,12 +188,23 @@ object EdgeDirectiveSnippets {
         "layout" to Spec(
             name = "layout",
             detail = "layout",
-            presentable = "layout('name') … @end",
+            presentable = "layout() … @end",
         ) { m ->
             block(m, "layout") { t ->
-                t.addTextSegment("layout('")
-                t.addVariable("NAME", ConstantNode("layouts/main"), true)
-                t.addTextSegment("')")
+                t.addTextSegment("layout()")
+            }
+        },
+        "form" to Spec(
+            name = "form",
+            detail = "component",
+            presentable = "form({ route }) … @end",
+        ) { m ->
+            block(m, "form") { t ->
+                t.addTextSegment("form({ route: '")
+                t.addVariable("ROUTE", ConstantNode("posts.store"), true)
+                t.addTextSegment("', method: '")
+                t.addVariable("METHOD", ConstantNode("POST"), true)
+                t.addTextSegment("' })")
             }
         },
         "page" to Spec(
@@ -233,6 +259,58 @@ object EdgeDirectiveSnippets {
                 t.addTextSegment("include('")
                 t.addVariable("NAME", ConstantNode("partials/card"), true)
                 t.addTextSegment("')")
+                t.addEndVariable()
+            }
+        },
+        "includeIf" to Spec(
+            name = "includeIf",
+            detail = "include",
+            presentable = "includeIf(condition, 'partial')",
+        ) { m ->
+            m.createTemplate("edge_includeIf", "Edge").also { t ->
+                t.addTextSegment("includeIf(")
+                t.addVariable("COND", ConstantNode("condition"), true)
+                t.addTextSegment(", '")
+                t.addVariable("NAME", ConstantNode("partials/card"), true)
+                t.addTextSegment("')")
+                t.addEndVariable()
+            }
+        },
+        "dump" to Spec(
+            name = "dump",
+            detail = "debug",
+            presentable = "dump(value)",
+        ) { m ->
+            m.createTemplate("edge_dump", "Edge").also { t ->
+                t.addTextSegment("dump(")
+                t.addVariable("VALUE", ConstantNode("state"), true)
+                t.addTextSegment(")")
+                t.addEndVariable()
+            }
+        },
+        "inject" to Spec(
+            name = "inject",
+            detail = "inject",
+            presentable = "inject({ key: value })",
+        ) { m ->
+            m.createTemplate("edge_inject", "Edge").also { t ->
+                t.addTextSegment("inject({ ")
+                t.addVariable("KEY", ConstantNode("key"), true)
+                t.addTextSegment(": ")
+                t.addVariable("VALUE", ConstantNode("value"), true)
+                t.addTextSegment(" })")
+                t.addEndVariable()
+            }
+        },
+        "eval" to Spec(
+            name = "eval",
+            detail = "eval",
+            presentable = "eval(expression)",
+        ) { m ->
+            m.createTemplate("edge_eval", "Edge").also { t ->
+                t.addTextSegment("eval(")
+                t.addVariable("EXPR", ConstantNode("await \$slots.main()"), true)
+                t.addTextSegment(")")
                 t.addEndVariable()
             }
         },

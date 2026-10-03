@@ -50,16 +50,10 @@ val EDGE_TEMPLATE_DATA = TemplateDataElementType(
 /**
  * Splits a template into Edge constructs and HTML host chunks.
  *
- * Every [advance] consumes at least one character, so the lexer can never
- * stall the editor.
+ * Tag components: any `@name(` / `@!name(` (including `@form`, `@field.root`)
+ * is a DIRECTIVE. Builtin names without args still match via [EdgeTagRegistry.BUILTIN].
  *
- * Echo forms (checked in this order):
- * - `{{-- … --}}` comments
- * - `{{{ … }}}` raw / unescaped echo
- * - `{!! … !!}` legacy raw echo (kept for compatibility)
- * - `{{ … }}` escaped echo
- *
- * Directives: `@name` or `@!name` (e.g. `@!component('alert')`).
+ * Escapes: `@@`, `@{{ … }}` (literal braces), trailing `~` swallow-newline.
  */
 class EdgeLexer : LexerBase() {
     private var buffer: CharSequence = ""
@@ -99,13 +93,20 @@ class EdgeLexer : LexerBase() {
         val text = buffer
         val i = tokenStart
 
+        // Escaped mustache: `@{{ … }}` / `@{{{ … }}}` / `@{!! … !!}` → host text.
+        if (text[i] == '@' && i + 1 < endOffset && isMustacheStart(text, i + 1)) {
+            val close = mustacheEnd(text, i + 1)
+            tokenEnd = if (close >= 0) close else endOffset
+            tokenType = EdgeTokens.TEMPLATE_DATA
+            return
+        }
+
         if (match(text, i, "{{--")) {
             val close = indexOf(text, i + 4, "--}}")
             tokenEnd = if (close >= 0) close + 4 else endOffset
             tokenType = EdgeTokens.COMMENT
             return
         }
-        // Must run before `{{` — `{{{` is a prefix of `{{`.
         if (match(text, i, "{{{")) {
             val close = indexOf(text, i + 3, "}}}")
             tokenEnd = if (close >= 0) close + 3 else endOffset
@@ -132,30 +133,48 @@ class EdgeLexer : LexerBase() {
         }
 
         var j = i + 1
-        // `@@if` is an escaped literal: step over both so the second `@` cannot open one.
         if (text[i] == '@' && j < endOffset && text[j] == '@') j++
         while (j < endOffset && !startsEdge(text, j)) j++
         tokenEnd = j
         tokenType = EdgeTokens.TEMPLATE_DATA
     }
 
-    private fun startsEdge(text: CharSequence, offset: Int): Boolean =
-        match(text, offset, "{{") ||
+    private fun startsEdge(text: CharSequence, offset: Int): Boolean {
+        if (text[offset] == '@' && offset + 1 < endOffset && isMustacheStart(text, offset + 1)) {
+            return true // consumed as escaped TEMPLATE_DATA in advance()
+        }
+        return match(text, offset, "{{") ||
             match(text, offset, "{!!") ||
             match(text, offset, "{{{") ||
             directiveEndAt(text, offset) > 0
+    }
+
+    private fun isMustacheStart(text: CharSequence, offset: Int): Boolean =
+        match(text, offset, "{{") || match(text, offset, "{!!")
+
+    private fun mustacheEnd(text: CharSequence, mustacheStart: Int): Int {
+        if (match(text, mustacheStart, "{{{")) {
+            val c = indexOf(text, mustacheStart + 3, "}}}")
+            return if (c >= 0) c + 3 else -1
+        }
+        if (match(text, mustacheStart, "{!!")) {
+            val c = indexOf(text, mustacheStart + 3, "!!}")
+            return if (c >= 0) c + 3 else -1
+        }
+        // Caller only invokes when `{{` / `{!!` / `{{{` starts here.
+        val c = indexOf(text, mustacheStart + 2, "}}")
+        return if (c >= 0) c + 2 else -1
+    }
 
     /** End offset of the directive at [offset], or -1 when there is none. */
     private fun directiveEndAt(text: CharSequence, offset: Int): Int {
         if (text[offset] != '@') return -1
         if (offset > 0 && text[offset - 1] == '@') return -1
         var j = offset + 1
-        // `@!component` — optional bang after `@`.
         if (j < endOffset && text[j] == '!') j++
         val nameStart = j
         if (j >= endOffset || !isIdentStart(text[j])) return -1
         while (j < endOffset && isIdentPart(text[j])) j++
-        // Tag components: `@layouts.app`, `@components.button.primary`
         while (j + 1 < endOffset && text[j] == '.' && isIdentStart(text[j + 1])) {
             j++
             while (j < endOffset && isIdentPart(text[j])) j++
@@ -163,22 +182,24 @@ class EdgeLexer : LexerBase() {
         if (j == nameStart) return -1
         val name = text.subSequence(nameStart, j).toString()
         val dotted = name.contains('.')
-        if (dotted) {
-            // Tag components (`@layouts.app`) — not email domains (`hi@example.com`).
-            val root = name.substringBefore('.')
-            var k = j
-            while (k < endOffset && text[k].isWhitespace()) k++
-            val hasArgs = k < endOffset && text[k] == '('
-            if (root !in TAG_COMPONENT_ROOTS && !hasArgs) return -1
-        } else if (name !in EdgeDirectives.NAMES) {
-            return -1
+        var k = j
+        while (k < endOffset && text[k].isWhitespace()) k++
+        val hasArgs = k < endOffset && text[k] == '('
+
+        val accepted = when {
+            // Any tag call `@form(…)` / `@!button(…)` / `@field.root(…)`.
+            hasArgs -> true
+            dotted -> name.substringBefore('.') in EdgeTagRegistry.TAG_COMPONENT_ROOTS
+            else -> name in EdgeTagRegistry.BUILTIN
         }
-        // Directives carry their argument list so `@if(a > b)` / `@layouts.app({…})`
-        // cannot break the HTML layer.
-        if (j < endOffset && text[j] == '(') {
-            val close = matchingParen(text, j)
+        if (!accepted) return -1
+
+        if (hasArgs) {
+            val close = matchingParen(text, k)
             j = if (close >= 0) close + 1 else endOffset
         }
+        // Swallow-newline marker.
+        if (j < endOffset && text[j] == '~') j++
         return j
     }
 
@@ -235,11 +256,4 @@ class EdgeLexer : LexerBase() {
     private fun isIdentStart(c: Char): Boolean = c == '_' || c.isLetter()
 
     private fun isIdentPart(c: Char): Boolean = c == '_' || c.isLetterOrDigit()
-
-    companion object {
-        /** First segment of Edge file-based tag components. */
-        private val TAG_COMPONENT_ROOTS: Set<String> = setOf(
-            "layouts", "components", "partials", "shamar", "wire",
-        )
-    }
 }

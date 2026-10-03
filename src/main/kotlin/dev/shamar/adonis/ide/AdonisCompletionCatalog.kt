@@ -75,6 +75,14 @@ object AdonisCompletionCatalog {
             SymbolKind.SHAMAR_FIELD -> index.shamar.fieldTypes.map { it to "field" }
             SymbolKind.SHAMAR_COLUMN -> index.shamar.columnTypes.map { it to "column" }
             SymbolKind.SHAMAR_NAV -> index.shamar.navGroups.map { it to "nav" }
+            SymbolKind.EDGE_LITERAL -> {
+                val prop = site.receiver ?: return emptyList()
+                EdgeTagRegistry.literalsForProp(prop).map { it to prop }
+            }
+            SymbolKind.EDGE_PROP_KEY -> {
+                val tag = site.receiver ?: return emptyList()
+                EdgeTagRegistry.propKeysForTag(tag).map { it to "prop" }
+            }
         }
     }
 
@@ -135,24 +143,59 @@ object AdonisCompletionCatalog {
         val names = (index.directives + EdgeDirectives.NAMES).toMutableSet()
         // Drop bang-prefixed indexer leftovers; we re-add the known bang form below.
         names.removeAll { it.startsWith("!") }
+        // Hide Blade-style closers from the default `@` list (aliases still insert `@end`).
+        names.removeAll { it.startsWith("end") && it != "end" }
         val out = linkedMapOf<String, String>()
         for (name in names.sorted()) {
             val detail = EdgeDirectiveSnippets.specFor(name)?.detail ?: when (name) {
-                "end", "endif", "endeach", "endcomponent", "endslot",
-                "endsection", "endlayout", "endwire", "endpersist",
-                -> "close"
+                "end" -> "close"
                 else -> "directive"
             }
             out[name] = detail
         }
-        // Self-closing bang component (typed as `@!component` or picked from `@`).
+        // File-based tag components: `@form`, `@field.root`, `@layouts.app`, …
+        for (tag in tagComponentNames(index)) {
+            out.putIfAbsent(tag, "component")
+        }
         out.putIfAbsent("!component", "component")
         for ((alias, real) in EdgeDirectives.ALIASES) {
-            if (real in names) {
+            // Hide Blade-style `endif` / `endeach` aliases from the `@` list.
+            if (alias.startsWith("end")) continue
+            if (real in EdgeDirectives.NAMES || real in names) {
                 out.putIfAbsent(alias, "→ @$real")
             }
         }
         return out.map { (n, d) -> n to d }
+    }
+
+    /** Short + dotted tag names from indexed components / component views. */
+    fun tagComponentNames(index: AdonisIndex): Set<String> {
+        val out = linkedSetOf<String>()
+        for (key in index.components.keys) {
+            val n = key.removePrefix("components.").removePrefix("components/")
+                .replace('/', '.')
+            if (n.isNotBlank()) out.add(n)
+        }
+        for (key in index.views.keys) {
+            when {
+                key.startsWith("components.") || key.startsWith("components/") -> {
+                    val n = key.removePrefix("components.").removePrefix("components/")
+                        .replace('/', '.')
+                    if (n.isNotBlank()) out.add(n)
+                }
+                key.startsWith("layouts.") || key.startsWith("layouts/") -> {
+                    val n = "layouts." + key.removePrefix("layouts.").removePrefix("layouts/")
+                        .replace('/', '.')
+                    out.add(n)
+                }
+                key.startsWith("partials.") || key.startsWith("partials/") -> {
+                    val n = "partials." + key.removePrefix("partials.").removePrefix("partials/")
+                        .replace('/', '.')
+                    out.add(n)
+                }
+            }
+        }
+        return out
     }
 
     /** @deprecated Prefer [AdonisModelResolver.columnsFor]; kept for tests. */

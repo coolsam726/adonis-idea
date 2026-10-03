@@ -4,8 +4,8 @@ package dev.shamar.adonis.ide
  * Edge block-structure checks: unmatched open/close directives.
  *
  * Adonis Edge closes blocks with a generic `@end` (not Blade `@endif`).
- * Supports modern tag components (`@layouts.app({…})`, `@page()`), bang
- * self-closers (`@!component(…)`), and mid-block `@else` / `@elseif`.
+ * Supports tag components (`@form({…})`, `@layouts.app({…})`, `@page()`), bang
+ * self-closers (`@!button(…)`), and mid-block `@else` / `@elseif`.
  */
 object AdonisEdgeStructure {
     data class Issue(
@@ -14,44 +14,19 @@ object AdonisEdgeStructure {
         val message: String,
     )
 
-    /** Directives that open a block closed by `@end`. */
-    val OPENERS: Set<String> = setOf(
-        "if", "unless", "each", "component", "slot", "section", "layout",
-        "wire", "persist", "page", "pushTo",
-    )
-
-    /** Mid-block tags — ignored for stack balance. */
-    val MID_BLOCK: Set<String> = setOf("elseif", "else")
-
-    /** Never open a block (self-closing even without `@!`). */
-    val VOID: Set<String> = setOf(
-        "include", "includeIf", "includeWhen", "includeUnless",
-        "svg", "vite", "inject", "eval", "let", "assign",
-        "debugger", "newError", "stack",
-    )
-
-    /** Generic Edge closer. */
+    val OPENERS: Set<String> = EdgeTagRegistry.OPENERS
+    val MID_BLOCK: Set<String> = EdgeTagRegistry.MID_BLOCK
+    val VOID: Set<String> = EdgeTagRegistry.VOID
     const val CLOSER: String = "end"
 
-    /**
-     * Legacy Blade-style closers some copied templates still use.
-     * Mapped to the same stack pop as `@end`.
-     */
-    private val LEGACY_CLOSERS: Set<String> = setOf(
-        "endif", "endunless", "endeach", "endcomponent", "endslot",
-        "endsection", "endlayout", "endwire", "endpersist", "endforeach",
-        "endfor", "endwhile", "endempty", "endisset", "show",
-    )
+    private val LEGACY_CLOSERS: Set<String> = EdgeTagRegistry.LEGACY_CLOSERS
+    private val INLINEABLE: Set<String> = EdgeTagRegistry.INLINEABLE
 
-    /** Openers that may be one-line / self-closing when args include a value. */
-    private val INLINEABLE: Set<String> = setOf("section")
-
-    /** `@layouts.app`, `@!component`, `@page`, `@end`. */
     private val DIRECTIVE = Regex("""@(!?)([A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*)""")
 
     /**
-     * True when `@section('name', 'value')` style inline (top-level comma in args).
-     * Commas inside `{…}` / `[…]` do not count.
+     * True when `@section('name', 'value')` / classic `@layout('master')` style
+     * inline (top-level comma in args, or single-string layout).
      */
     fun isInlineDirective(text: String, atNameEnd: Int): Boolean {
         var i = atNameEnd
@@ -124,7 +99,7 @@ object AdonisEdgeStructure {
             val start = m.range.first
             val end = m.range.last + 1
             when {
-                bang || root in VOID -> {
+                bang || root in VOID || name in VOID -> {
                     // Self-closing / void — never push.
                 }
                 name == CLOSER || name in LEGACY_CLOSERS -> {
@@ -139,8 +114,12 @@ object AdonisEdgeStructure {
                         issues.add(Issue(start, end, "Unexpected @$name (no matching open)"))
                     }
                 }
-                isBlockOpener(name, root) -> {
+                isBlockOpener(name, root, text, end) -> {
                     if (root in INLINEABLE && isInlineDirective(text, end)) {
+                        continue
+                    }
+                    // Classic `@layout('master')` with a single string — no @end.
+                    if (root == "layout" && !name.contains('.') && isSingleStringArg(text, end)) {
                         continue
                     }
                     stack.addLast(Frame(name, start, end))
@@ -159,9 +138,38 @@ object AdonisEdgeStructure {
         return issues
     }
 
-    /** Known openers, dotted tag components (`layouts.app`), or slot-like roots. */
-    private fun isBlockOpener(name: String, root: String): Boolean =
-        name in OPENERS ||
-            root in OPENERS ||
-            name.contains('.')
+    private fun isSingleStringArg(text: String, atNameEnd: Int): Boolean {
+        var i = atNameEnd
+        while (i < text.length && text[i].isWhitespace()) i++
+        if (i >= text.length || text[i] != '(') return false
+        i++
+        while (i < text.length && text[i].isWhitespace()) i++
+        if (i >= text.length || (text[i] != '\'' && text[i] != '"')) return false
+        val q = text[i++]
+        while (i < text.length && text[i] != q) {
+            if (text[i] == '\\') i++
+            i++
+        }
+        if (i >= text.length) return false
+        i++ // closing quote
+        while (i < text.length && text[i].isWhitespace()) i++
+        return i < text.length && text[i] == ')'
+    }
+
+    /**
+     * Known openers, dotted tag components with args/known roots, or custom
+     * undotted tags that look like calls (`@form(`).
+     */
+    private fun isBlockOpener(name: String, root: String, text: String, nameEnd: Int): Boolean {
+        if (name in OPENERS || root in OPENERS) return true
+        var i = nameEnd
+        while (i < text.length && text[i].isWhitespace()) i++
+        val hasArgs = i < text.length && text[i] == '('
+        if (name.contains('.')) {
+            return hasArgs || root in EdgeTagRegistry.TAG_COMPONENT_ROOTS
+        }
+        // `@form(` / `@card(` — file-based tag components.
+        return hasArgs && root !in VOID && root !in MID_BLOCK &&
+            root != CLOSER && root !in LEGACY_CLOSERS
+    }
 }

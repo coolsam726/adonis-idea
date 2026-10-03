@@ -116,6 +116,20 @@ object AdonisCallSiteSearcher {
                 out.add(Span(start, start + name.length))
                 from = idx + tag.length
             }
+            // Edge tag components: `@form` / `@!button` / `@field.root`
+            val edgeTag = Regex("""@!?(${Regex.escape(name)})\b""")
+            for (m in edgeTag.findAll(text)) {
+                val g = m.groups[1] ?: continue
+                out.add(Span(g.range.first, g.range.last + 1))
+            }
+        }
+        if (kind == SymbolKind.ROUTE) {
+            // `@form({ route: 'name' })` / `@link({ route: "name" })`
+            val prop = Regex("""\broute\s*:\s*(['"])(${Regex.escape(name)})\1""")
+            for (m in prop.findAll(text)) {
+                val g = m.groups[2] ?: continue
+                out.add(Span(g.range.first, g.range.last + 1))
+            }
         }
         if (kind == SymbolKind.ENV) {
             val interp = "\${$name}"

@@ -27,13 +27,15 @@ object EdgeSyntaxHighlighter : SyntaxHighlighterBase() {
     override fun getTokenHighlights(tokenType: IElementType): Array<TextAttributesKey> =
         when (tokenType) {
             EdgeTokens.COMMENT -> COMMENT_KEYS
-            EdgeTokens.ECHO, EdgeTokens.RAW_ECHO -> ECHO_KEYS
+            EdgeTokens.ECHO -> ECHO_KEYS
+            EdgeTokens.RAW_ECHO -> RAW_ECHO_KEYS
             EdgeTokens.DIRECTIVE -> DIRECTIVE_KEYS
             else -> EMPTY
         }
 
     private val COMMENT_KEYS = arrayOf(EdgeColors.COMMENT)
     private val ECHO_KEYS = arrayOf(EdgeColors.ECHO)
+    private val RAW_ECHO_KEYS = arrayOf(EdgeColors.RAW_ECHO)
     private val DIRECTIVE_KEYS = arrayOf(EdgeColors.DIRECTIVE)
     private val EMPTY = emptyArray<TextAttributesKey>()
 }
@@ -46,6 +48,10 @@ object EdgeColors {
     val ECHO: TextAttributesKey = TextAttributesKey.createTextAttributesKey(
         "EDGE_ECHO",
         DefaultLanguageHighlighterColors.TEMPLATE_LANGUAGE_COLOR,
+    )
+    val RAW_ECHO: TextAttributesKey = TextAttributesKey.createTextAttributesKey(
+        "EDGE_RAW_ECHO",
+        DefaultLanguageHighlighterColors.STRING,
     )
     /** Directives / tag components — keyword weight so Edge does not look flat. */
     val DIRECTIVE: TextAttributesKey = TextAttributesKey.createTextAttributesKey(
