@@ -41,7 +41,7 @@ class AdonisProjectService(private val project: Project) {
      */
     fun index(): AdonisIndex {
         indexRef.get()?.let { return it }
-        if (mustNotBlockEdt()) {
+        if (shouldDeferRebuild()) {
             scheduleRebuild()
             return AdonisIndex.empty(error = "Indexing…")
         }
@@ -90,10 +90,12 @@ class AdonisProjectService(private val project: Project) {
         rebuildAsync()
     }
 
-    private fun mustNotBlockEdt(): Boolean {
+    private fun shouldDeferRebuild(): Boolean {
         val app = ApplicationManager.getApplication() ?: return false
-        if (app.isUnitTestMode) return false
-        return app.isDispatchThread
+        return AdonisIndexThreading.shouldDeferRebuild(
+            isDispatchThread = app.isDispatchThread,
+            isUnitTestMode = app.isUnitTestMode,
+        )
     }
 
     companion object {
