@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Adonis_Idea-0.2.0-5A6DF5?style=for-the-badge&logo=adonisjs&logoColor=white" alt="Adonis Idea 0.2.0" />
+  <img src="https://img.shields.io/badge/Adonis_Idea-0.3.0-5A6DF5?style=for-the-badge&logo=adonisjs&logoColor=white" alt="Adonis Idea 0.3.0" />
 </p>
 
 <p align="center">
