@@ -66,6 +66,10 @@ intellijPlatform {
         changeNotes.set(
             """
             <ul>
+              <li>0.2.0 — Plugin id <code>dev.shamar.adonis.ide</code>; official AdonisJS
+                  icon; precise controller-action navigation; view.render completions;
+                  Edge layouts/page structure + color scheme; two-way env keys;
+                  <code>@each</code> loop aliases.</li>
               <li>0.1.0 — Initial Adonis Idea release: Edge language, bundled
                   indexer (no framework install required), routes/views/config/env,
                   Lucid/Mongoose, Wire attributes, detection-gated Shamar layer,
