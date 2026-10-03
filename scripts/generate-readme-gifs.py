@@ -422,7 +422,82 @@ def make_edge_templates() -> list[Image.Image]:
     return frames
 
 
+def make_edge_directives() -> list[Image.Image]:
+    """Type `@` → full directive list → pick `each` → structured snippet + `@end`."""
+    popup_items = [
+        "each(item in items) … @end",
+        "if(condition) … @end",
+        "component('name') … @end",
+        "!component('name')",
+        "include('partial')",
+        "layout('name') … @end",
+        "page() … @end",
+        "wire('name') … @end",
+    ]
+    frames: list[Image.Image] = []
+
+    # Phase A: empty file → type `@` → popup
+    for step in range(22):
+        img = base_frame([("posts.edge", True), ("routes.ts", False)], 8, title="WebStorm")
+        draw = ImageDraw.Draw(img)
+        y = TITLE_H + 8
+
+        draw_segments(draw, CODE_X, y, [Segment("<ul>", HTML_TAG)])
+        y += LINE_H
+
+        at_visible = step >= 2
+        typed = "@" if at_visible else ""
+        draw.text((CODE_X, y), typed, fill=EDGE_DIR, font=FONT_BOLD)
+        cx = CODE_X + text_w(typed, FONT_BOLD)
+        if step < 6:
+            draw_cursor(draw, cx, y, (step // 2) % 2 == 0)
+
+        if step >= 4:
+            sel = min((step - 4) // 2, 2)
+            draw_popup(draw, CODE_X, y + LINE_H, popup_items, selected=sel, width=300)
+
+        y += LINE_H
+        draw_segments(draw, CODE_X, y, [Segment("</ul>", HTML_TAG)])
+        frames.append(img)
+
+    # Phase B: accept `each` → live template with placeholders + @end
+    expanded = [
+        [Segment("@each", EDGE_DIR), Segment("(item in items)", EDGE_EXPR)],
+        [Segment("  ", TEXT), Segment("<li>", HTML_TAG), Segment("{{ item }}", EDGE_EXPR), Segment("</li>", HTML_TAG)],
+        [Segment("@end", EDGE_DIR)],
+    ]
+    for step in range(18):
+        img = base_frame([("posts.edge", True), ("routes.ts", False)], 8, title="WebStorm")
+        draw = ImageDraw.Draw(img)
+        y = TITLE_H + 8
+        draw_segments(draw, CODE_X, y, [Segment("<ul>", HTML_TAG)])
+        y += LINE_H
+
+        overlay = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+        od = ImageDraw.Draw(overlay)
+        for i, segs in enumerate(expanded):
+            draw_segments(draw, CODE_X, y, segs)
+            if i == 0 and step < 10:
+                # Highlight the first tab-stop (`item`).
+                hx = CODE_X + text_w("@each(")
+                od.rectangle((hx, y, hx + text_w("item"), y + LINE_H - 2), fill=(90, 109, 245, 70))
+            y += LINE_H
+        img = Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
+        draw = ImageDraw.Draw(img)
+        if step > 6:
+            draw.text(
+                (CODE_X, TITLE_H + 8 + 5 * LINE_H),
+                "Tab through args · @end inserted",
+                fill=ACCENT,
+                font=FONT,
+            )
+        frames.append(img)
+
+    return frames
+
+
 def make_ace_generators() -> list[Image.Image]:
+
     menu_items = [
         ("Adonis", False),
         ("  New…", True),
@@ -463,6 +538,7 @@ def main() -> None:
         ("navigation-controller.gif", make_navigation_controller),
         ("completions-routes.gif", make_completions_routes),
         ("edge-templates.gif", make_edge_templates),
+        ("edge-directives.gif", make_edge_directives),
         ("ace-generators.gif", make_ace_generators),
     ]
 

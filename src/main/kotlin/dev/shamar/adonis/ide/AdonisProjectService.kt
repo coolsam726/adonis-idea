@@ -18,7 +18,12 @@ class AdonisProjectService(private val project: Project) {
     private val LOG = logger<AdonisProjectService>()
 
     fun appRoot(): Path? {
-        val base = project.guessProjectDir()?.toNioPath() ?: return null
+        val base = try {
+            project.guessProjectDir()?.toNioPath()
+        } catch (_: UnsupportedOperationException) {
+            // Light-test temp VFS has no NIO path.
+            null
+        } ?: return null
         return findAppRoot(base)
     }
 

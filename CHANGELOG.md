@@ -10,6 +10,7 @@
 - Edge theming: dotted tag-component lexer, Color Scheme → Edge, dark file icon
 - Two-way env coordination: `.env*`, `start/env.ts` schema, `env.get` / `process.env` usages
 - `@each` loop completion (aliases: `for` / `loop` / `foreach`)
+- Typing `@` auto-lists all Edge directives; block directives expand to structured snippets (args + `@end`)
 - README usage guide with for-the-badge stats and demo GIFs
 
 ## 0.1.0
