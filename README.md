@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/Adonis_Idea-0.1.0-5A6DF5?style=for-the-badge&logo=adonisjs&logoColor=white" alt="Adonis Idea 0.1.0" />
+  <img src="https://img.shields.io/badge/Adonis_Idea-0.2.0-5A6DF5?style=for-the-badge&logo=adonisjs&logoColor=white" alt="Adonis Idea 0.2.0" />
 </p>
 
 <p align="center">
@@ -18,6 +18,8 @@
 
 **Adonis Idea** is a native JetBrains plugin for [AdonisJS](https://adonisjs.com) in **WebStorm**.  
 It adds Edge language support, deep completions, precise navigation, Ace generators, Lucid/Mongoose helpers, Wire attributes, and optional [Shamar](https://github.com/coolsam726/shamar) intelligence — **without requiring any `@shamar/*` packages**.
+
+Plugin id: `dev.shamar.adonis.ide`
 
 ---
 
