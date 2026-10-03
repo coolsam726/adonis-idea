@@ -1,6 +1,6 @@
 # Coverage
 
-Adonis Idea enforces **100% line coverage** on the verified product-logic set via
+The AdonisJS plugin enforces **100% line coverage** on the verified product-logic set via
 [Kover](https://github.com/Kotlin/kotlinx-kover):
 
 ```bash

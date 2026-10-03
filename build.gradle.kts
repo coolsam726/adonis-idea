@@ -57,7 +57,7 @@ intellijPlatform {
         }
         description.set(
             """
-            Adonis Idea — native Edge highlighting, deep completions, navigation,
+            AdonisJS — native Edge highlighting, deep completions, navigation,
             Ace generators, Lucid/Mongoose ORM intelligence, and optional Shamar
             support. Works on any AdonisJS app; no @shamar packages required.
             WebStorm 2024.2+.
@@ -66,6 +66,8 @@ intellijPlatform {
         changeNotes.set(
             """
             <ul>
+              <li>0.3.3 — Marketplace display name renamed to <code>AdonisJS</code>
+                  (names containing &quot;IDEA&quot; are rejected by JetBrains).</li>
               <li>0.3.2 — Reliable <code>@</code> directive autopopup; detection-gated
                   <code>@wire</code>/<code>@persist</code>; never wait on the Node
                   indexer under a ReadAction.</li>

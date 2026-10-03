@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3
+
+- Marketplace display name renamed to **AdonisJS** (JetBrains rejects names containing “IDEA”)
+
 ## 0.3.2
 
 - Fix `@` directive autopopup (schedule from `checkAutoPopup` + never skip via HTML confidence)

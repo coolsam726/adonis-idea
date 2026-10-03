@@ -166,6 +166,25 @@ def check_plugin_xml() -> None:
     ):
         if needle not in xml:
             err(f"REGRESSION(plugin.xml): missing {needle!r}")
+    # JetBrains Marketplace rejects display names containing "IDEA".
+    import re
+
+    props = read("gradle.properties")
+    name_m = re.search(r"^pluginName\s*=\s*(.+)$", props, re.M)
+    plugin_name = (name_m.group(1).strip() if name_m else "")
+    if not plugin_name:
+        err("REGRESSION(name): pluginName missing from gradle.properties")
+    elif re.search(r"idea", plugin_name, re.I):
+        err(
+            f"REGRESSION(name): pluginName {plugin_name!r} contains 'IDEA' "
+            "(JetBrains Marketplace rejection)"
+        )
+    xml_name = re.search(r"<name>([^<]+)</name>", xml)
+    if xml_name and re.search(r"idea", xml_name.group(1), re.I):
+        err(
+            f"REGRESSION(name): plugin.xml <name>{xml_name.group(1)}</name> "
+            "contains 'IDEA'"
+        )
 
 
 def main() -> int:
