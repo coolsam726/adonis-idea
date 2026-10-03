@@ -178,6 +178,7 @@ class AdonisFullParityTest {
         val cases = listOf(
             """route('ho""" to SymbolKind.ROUTE,
             """view('pages/ho""" to SymbolKind.VIEW,
+            """view.render('pages/auth/sign""" to SymbolKind.VIEW,
             """env.get('APP_""" to SymbolKind.ENV,
             """env.get('DB_CONNECTION', 'p""" to SymbolKind.ENV_VALUE,
             """@include('pages/ho""" to SymbolKind.VIEW,

@@ -29,7 +29,7 @@ object CallSiteDetector {
             "load|loadMissing|with_|load_missing|where_has|or_where_has|doesnt_have"
 
     private val METHOD_CALL = Regex(
-        """(?<recv>\b[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*)\.(?<fn>route|route_is|view|config|__|t|trans|env|can|authorize|middleware|disk|render|$RELATION_FNS|$COLUMN_FNS|table|vite|asset|url|ace)\s*\(\s*(?<q>['"])(?<pre>[^'"]*)\z""",
+        """(?<recv>\b[A-Za-z_][\w]*(?:\.[A-Za-z_][\w]*)*)\.(?<fn>route|route_is|view|config|__|t|trans|env|can|authorize|middleware|disk|renderSync|render|$RELATION_FNS|$COLUMN_FNS|table|vite|asset|url|ace)\s*\(\s*(?<q>['"])(?<pre>[^'"]*)\z""",
         RegexOption.IGNORE_CASE,
     )
 
@@ -40,7 +40,7 @@ object CallSiteDetector {
 
     /** ``redirect().route("…`` — call after ``).``. */
     private val CHAINED_CALL = Regex(
-        """\)\.(?<fn>route|route_is|view|config|__|t|trans|env|can|authorize|middleware|disk|render|$RELATION_FNS|$COLUMN_FNS|table|vite|asset|url|as|use|noop)\s*\(\s*(?<q>['"])(?<pre>[^'"]*)\z""",
+        """\)\.(?<fn>route|route_is|view|config|__|t|trans|env|can|authorize|middleware|disk|renderSync|render|$RELATION_FNS|$COLUMN_FNS|table|vite|asset|url|as|use|noop)\s*\(\s*(?<q>['"])(?<pre>[^'"]*)\z""",
         RegexOption.IGNORE_CASE,
     )
 
@@ -175,24 +175,39 @@ object CallSiteDetector {
     private val RELATION_FN_SET = RELATION_FNS.split('|').map { it.lowercase() }.toSet()
     private val CALL_MATCHERS = listOf(METHOD_CALL, CHAINED_CALL, GLOBAL_CALL)
 
-    private fun kindForCall(fn: String): SymbolKind? = when (fn.lowercase()) {
-        "route", "route_is", "as" -> SymbolKind.ROUTE
-        "view" -> SymbolKind.VIEW
-        "config" -> SymbolKind.CONFIG
-        "__", "t", "trans" -> SymbolKind.TRANSLATION
-        "env" -> SymbolKind.ENV
-        "can", "authorize" -> SymbolKind.GATE
-        "middleware", "use" -> SymbolKind.MIDDLEWARE
-        "disk" -> SymbolKind.DISK
-        "render" -> SymbolKind.INERTIA
-        "table" -> SymbolKind.TABLE
-        "vite", "asset", "url" -> SymbolKind.VITE
-        "ace" -> SymbolKind.ACE
-        else -> when {
-            fn.lowercase() in RELATION_FN_SET -> SymbolKind.RELATION
-            fn.lowercase() in COLUMN_FN_SET -> SymbolKind.COLUMN
-            else -> null
+    private fun kindForCall(fn: String, receiver: String?): SymbolKind? {
+        val name = fn.lowercase()
+        // Adonis: view.render('pages/auth/signup') / ctx.view.renderSync('…')
+        if ((name == "render" || name == "rendersync") && isViewReceiver(receiver)) {
+            return SymbolKind.VIEW
         }
+        return when (name) {
+            "route", "route_is", "as" -> SymbolKind.ROUTE
+            "view" -> SymbolKind.VIEW
+            "config" -> SymbolKind.CONFIG
+            "__", "t", "trans" -> SymbolKind.TRANSLATION
+            "env" -> SymbolKind.ENV
+            "can", "authorize" -> SymbolKind.GATE
+            "middleware", "use" -> SymbolKind.MIDDLEWARE
+            "disk" -> SymbolKind.DISK
+            // Bare render(…) without a view receiver — Inertia-style page name.
+            "render" -> SymbolKind.INERTIA
+            "table" -> SymbolKind.TABLE
+            "vite", "asset", "url" -> SymbolKind.VITE
+            "ace" -> SymbolKind.ACE
+            else -> when {
+                name in RELATION_FN_SET -> SymbolKind.RELATION
+                name in COLUMN_FN_SET -> SymbolKind.COLUMN
+                else -> null
+            }
+        }
+    }
+
+    /** True for `view`, `View`, `ctx.view`, `response.view`, etc. */
+    private fun isViewReceiver(receiver: String?): Boolean {
+        if (receiver.isNullOrBlank()) return false
+        val leaf = receiver.substringAfterLast('.').lowercase()
+        return leaf == "view"
     }
 
     /**
@@ -309,15 +324,16 @@ object CallSiteDetector {
         }
         MODEL_QUERY_CHAIN.find(tail)?.let { m ->
             val fn = m.named("fn")?.lowercase() ?: return@let
-            val kind = kindForCall(fn) ?: return@let
-            return Site(kind, m.named("pre") ?: "", receiver = m.named("recv"))
+            val recv = m.named("recv")
+            val kind = kindForCall(fn, recv) ?: return@let
+            return Site(kind, m.named("pre") ?: "", receiver = recv)
         }
         CALL_MATCHERS.forEach { regex ->
             regex.find(tail)?.let { m ->
                 val fn = m.named("fn")?.lowercase() ?: return@let
                 val pre = m.named("pre") ?: ""
                 var recv = m.named("recv")
-                val kind = kindForCall(fn) ?: return@let
+                val kind = kindForCall(fn, recv) ?: return@let
                 if (recv == null && (kind == SymbolKind.COLUMN || kind == SymbolKind.RELATION)) {
                     recv = AdonisModelResolver.inferChainHead(tail)
                 }
