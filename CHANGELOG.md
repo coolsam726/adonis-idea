@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.4
+
+- Tool-window icon uses a monochrome mark so New UI shows the blue Adonis glyph when selected (not a blue blob over the brand logo)
+
 ## 0.3.3
 
 - Marketplace display name renamed to **AdonisJS** (JetBrains rejects names containing “IDEA”)

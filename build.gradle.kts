@@ -66,6 +66,8 @@ intellijPlatform {
         changeNotes.set(
             """
             <ul>
+              <li>0.3.4 — Monochrome tool-window icon so New UI paints the Adonis
+                  mark blue when selected.</li>
               <li>0.3.3 — Marketplace display name renamed to <code>AdonisJS</code>
                   (names containing &quot;IDEA&quot; are rejected by JetBrains).</li>
               <li>0.3.2 — Reliable <code>@</code> directive autopopup; detection-gated
