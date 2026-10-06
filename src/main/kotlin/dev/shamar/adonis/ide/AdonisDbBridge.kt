@@ -56,6 +56,17 @@ object AdonisDbBridge {
         }
     }
 
+    fun diagnose(project: Project, settings: AdonisDbSettings): String {
+        if (!isDatabasePluginAvailable()) return "Database plugin is not enabled"
+        val ref = resolveSelectedRef(project, settings)
+            ?: return "No Database tool DataSource selected"
+        return try {
+            AdonisDasIntrospector.diagnose(project, ref.name, ref.uniqueId)
+        } catch (t: Throwable) {
+            t.message ?: t.toString()
+        }
+    }
+
     fun resolveSelectedRef(project: Project, settings: AdonisDbSettings): DataSourceRef? {
         val all = listDataSources(project)
         if (all.isEmpty()) return null

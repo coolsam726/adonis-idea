@@ -66,6 +66,8 @@ intellijPlatform {
         changeNotes.set(
             """
             <ul>
+              <li>0.4.1 — Database tool columns: prefer LocalDataSource schema
+                  model; Settings status shows why refresh returned empty.</li>
               <li>0.4.0 — Shamar 1.0.10 catch-up (enums/widgets/make-widget);
                   Inertia void tags; Edge CSS custom-property suppress; Lucid
                   snake/camel columns; Database tool column sources
