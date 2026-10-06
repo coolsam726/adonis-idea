@@ -1,5 +1,7 @@
 package dev.shamar.adonis.ide
 
+import com.intellij.openapi.project.Project
+
 /**
  * Pure completion catalog — driven by [AdonisIndex] + [AdonisModelResolver].
  */
@@ -8,6 +10,7 @@ object AdonisCompletionCatalog {
         index: AdonisIndex,
         site: CallSiteDetector.Site,
         beforeCaret: String = "",
+        project: Project? = null,
     ): List<Pair<String, String>> {
         return when (site.kind) {
             SymbolKind.ROUTE -> index.routes
@@ -25,9 +28,16 @@ object AdonisCompletionCatalog {
                 index.optionsForEnvKey(key).map { it to "$key option" }
             }
             SymbolKind.TABLE -> index.tables.map { (n, t) -> n to (t.detail.ifBlank { "table" }) }
-            SymbolKind.COLUMN, SymbolKind.MODEL_ATTR, SymbolKind.ATTR -> {
+            SymbolKind.COLUMN -> {
                 val hint = resolveHint(index, site, beforeCaret)
-                AdonisModelResolver.columnsFor(index, hint).map { it to columnDetail(index, hint, it) }
+                val cols = AdonisModelResolver.columnsFor(index, hint, project)
+                val orm = AdonisModelResolver.ormFor(index, hint)
+                AdonisColumnNames.forQuery(cols, orm).map { it to columnDetail(index, hint, it) }
+            }
+            SymbolKind.MODEL_ATTR, SymbolKind.ATTR -> {
+                val hint = resolveHint(index, site, beforeCaret)
+                val cols = AdonisModelResolver.columnsFor(index, hint, project)
+                AdonisColumnNames.forAttr(cols).map { it to columnDetail(index, hint, it) }
             }
             SymbolKind.RELATION -> {
                 val hint = resolveHint(index, site, beforeCaret)
@@ -75,6 +85,18 @@ object AdonisCompletionCatalog {
             SymbolKind.SHAMAR_FIELD -> index.shamar.fieldTypes.map { it to "field" }
             SymbolKind.SHAMAR_COLUMN -> index.shamar.columnTypes.map { it to "column" }
             SymbolKind.SHAMAR_NAV -> index.shamar.navGroups.map { it to "nav" }
+            SymbolKind.SHAMAR_WIDGET -> {
+                val fromIndex = index.shamar.widgets.map { (n, w) ->
+                    n to (w.kind ?: w.panel.ifBlank { "widget" })
+                }
+                val fromTypes = index.shamar.widgetTypes.map { it to "widget type" }
+                (fromIndex + fromTypes).distinctBy { it.first }
+            }
+            SymbolKind.SHAMAR_LITERAL -> {
+                val family = site.receiver ?: return emptyList()
+                val detail = ShamarLiterals.detailFor(family)
+                ShamarLiterals.valuesFor(family).map { it to detail }
+            }
             SymbolKind.EDGE_LITERAL -> {
                 val prop = site.receiver ?: return emptyList()
                 EdgeTagRegistry.literalsForProp(prop).map { it to prop }
@@ -147,10 +169,7 @@ object AdonisCompletionCatalog {
         names.removeAll { it.startsWith("end") && it != "end" }
         val out = linkedMapOf<String, String>()
         for (name in names.sorted()) {
-            val detail = EdgeDirectiveSnippets.specFor(name)?.detail ?: when (name) {
-                "end" -> "close"
-                else -> "directive"
-            }
+            val detail = EdgeDirectiveSnippets.specFor(name)?.detail ?: "directive"
             out[name] = detail
         }
         // File-based tag components: `@form`, `@field.root`, `@layouts.app`, …
@@ -218,8 +237,8 @@ object AdonisCompletionCatalog {
     }
 
     /** @deprecated Prefer [AdonisModelResolver.columnsFor]; kept for tests. */
-    fun columnsFor(index: AdonisIndex, receiver: String?): Set<String> =
-        AdonisModelResolver.columnsFor(index, receiver)
+    fun columnsFor(index: AdonisIndex, receiver: String?, project: Project? = null): Set<String> =
+        AdonisModelResolver.columnsFor(index, receiver, project)
 
     fun relationsFor(index: AdonisIndex, receiver: String?): Set<String> {
         if (receiver != null) {

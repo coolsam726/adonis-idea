@@ -20,6 +20,8 @@
   <depends>com.intellij.modules.xml</depends>
   <!-- WebStorm ships JS/TS; required so Marketplace treats this as a WebStorm plugin. -->
   <depends>JavaScript</depends>
+  <!-- Database Tools — optional; live column completions degrade to migrations when absent. -->
+  <depends optional="true" config-file="adonis-database.xml">com.intellij.database</depends>
 
   <!--
     WebStorm only. Marketplace + runtime loading use product-module aliases
@@ -77,6 +79,16 @@
     <completion.confidence language="HTML" implementationClass="dev.shamar.adonis.ide.EdgeCompletionConfidence" id="edgeHtml" order="first"/>
     <annotator language="any" implementationClass="dev.shamar.adonis.ide.AdonisAnnotator"/>
     <annotator language="Edge" implementationClass="dev.shamar.adonis.ide.AdonisEdgeStructureAnnotator"/>
+    <!-- Dual-PSI HTML/CSS roots: custom props often live in Vite CSS, not the Edge file. -->
+    <lang.inspectionSuppressor language="HTML" implementationClass="dev.shamar.adonis.ide.EdgeCssInspectionSuppressor"/>
+    <lang.inspectionSuppressor language="CSS" implementationClass="dev.shamar.adonis.ide.EdgeCssInspectionSuppressor"/>
+
+    <projectConfigurable
+        parentId="tools"
+        id="dev.shamar.adonis.ide.settings"
+        displayName="AdonisJS"
+        nonDefaultProject="true"
+        instance="dev.shamar.adonis.ide.AdonisDbConfigurable"/>
     <lang.documentationProvider language="any" implementationClass="dev.shamar.adonis.ide.AdonisDocumentationProvider"/>
     <intentionAction>
       <language>any</language>

@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Shamar 1.0.8–1.0.10 catch-up: complete `openIn` / `presentation` / `createMode|editMode|viewMode` / Stat color enums
+- Index `app/widgets/**`, seed widget types (`StatsOverviewWidget`, `Stat`, …), Edge helpers `isDialogPageMode` / `dialogPresentation`
+- Generators: `shamar:make-widget` (+ offline stub); Ace list uses `shamar:publish-auth`
+- RelationTable / `*Assignment` recognized as Shamar field `make(` sites
+- Treat `@inertia` / `@inertiaHead` / `@viteReactRefresh` as void Edge tags (no false `@end` expected)
+- Suppress CSS “Unresolved custom property” inside `*.edge` (vars usually live in Vite CSS)
+- Lucid column completions: snake+camel in queries, camelCase on attributes; index `@column({ columnName })`
+- Database tool column source (Settings → Tools → AdonisJS): migrations / connection / both + DataSource picker + schema cache
+
 ## 0.3.6
 
 - GitHub Funding (Sponsors + Ko-fi); README Marketplace CTA uses a badge (iframe does not render on GitHub)

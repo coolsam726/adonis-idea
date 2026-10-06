@@ -1,0 +1,8 @@
+<idea-plugin>
+  <!--
+    Loaded only when com.intellij.database is enabled.
+    Live column access is reflective (AdonisDasIntrospector); this descriptor
+    exists so the optional dependency is well-formed and can host DB-only
+    extensions later (schema listeners, etc.).
+  -->
+</idea-plugin>

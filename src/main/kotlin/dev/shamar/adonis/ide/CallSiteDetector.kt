@@ -109,7 +109,7 @@ object CallSiteDetector {
     )
 
     private val SHAMAR_FIELD = Regex(
-        """\b(?<fn>[A-Z][A-Za-z0-9_]*Input|[A-Z][A-Za-z0-9_]*(?:Picker|Editor|Upload|Repeater|Select|Toggle|Checkbox|Radio|Slider|Rating|Hidden))\s*\.\s*make\s*\(\s*(?<q>['"])(?<pre>[^'"]*)\z""",
+        """\b(?<fn>[A-Z][A-Za-z0-9_]*Input|[A-Z][A-Za-z0-9_]*(?:Picker|Editor|Upload|Repeater|Select|Toggle|Checkbox|Radio|Slider|Rating|Hidden|Table|Assignment))\s*\.\s*make\s*\(\s*(?<q>['"])(?<pre>[^'"]*)\z""",
     )
 
     private val SHAMAR_COLUMN = Regex(
@@ -118,6 +118,26 @@ object CallSiteDetector {
 
     private val SHAMAR_NAV = Regex(
         """\bnavigationGroup\s*=\s*(?<q>['"])(?<pre>[^'"]*)\z""",
+    )
+
+    /** Action `.openIn('modal'`. */
+    private val SHAMAR_OPEN_IN = Regex(
+        """\.openIn\s*\(\s*(?<q>['"])(?<pre>[^'"]*)\z""",
+    )
+
+    /** Action `.presentation('sidebar'`. */
+    private val SHAMAR_PRESENTATION = Regex(
+        """\.presentation\s*\(\s*(?<q>['"])(?<pre>[^'"]*)\z""",
+    )
+
+    /** Resource `createMode = 'modal'` / `editMode: 'sidebar'`. */
+    private val SHAMAR_PAGE_MODE = Regex(
+        """\b(?<fn>createMode|editMode|viewMode)\s*[=:]\s*(?<q>['"])(?<pre>[^'"]*)\z""",
+    )
+
+    /** Stat `.color('success'` / `.descriptionColor(` / `.chartColor(`. */
+    private val SHAMAR_STAT_COLOR = Regex(
+        """\.(?<fn>descriptionColor|chartColor|color)\s*\(\s*(?<q>['"])(?<pre>[^'"]*)\z""",
     )
 
     private val DOTENV_INTERPOLATION = Regex("""\$\{(?<pre>[A-Za-z_][\w]*)?\z""")
@@ -320,6 +340,34 @@ object CallSiteDetector {
                 else -> SymbolKind.VIEW
             }
             return Site(kind, m.groups["pre"]?.value ?: "")
+        }
+        SHAMAR_OPEN_IN.find(tail)?.let {
+            return Site(
+                SymbolKind.SHAMAR_LITERAL,
+                it.groups["pre"]?.value ?: "",
+                receiver = ShamarLiterals.OPEN_IN,
+            )
+        }
+        SHAMAR_PRESENTATION.find(tail)?.let {
+            return Site(
+                SymbolKind.SHAMAR_LITERAL,
+                it.groups["pre"]?.value ?: "",
+                receiver = ShamarLiterals.PRESENTATION,
+            )
+        }
+        SHAMAR_PAGE_MODE.find(tail)?.let {
+            return Site(
+                SymbolKind.SHAMAR_LITERAL,
+                it.groups["pre"]?.value ?: "",
+                receiver = ShamarLiterals.PAGE_MODE,
+            )
+        }
+        SHAMAR_STAT_COLOR.find(tail)?.let {
+            return Site(
+                SymbolKind.SHAMAR_LITERAL,
+                it.groups["pre"]?.value ?: "",
+                receiver = ShamarLiterals.STAT_COLOR,
+            )
         }
         SHAMAR_NAV.find(tail)?.let {
             return Site(SymbolKind.SHAMAR_NAV, it.groups["pre"]?.value ?: "")

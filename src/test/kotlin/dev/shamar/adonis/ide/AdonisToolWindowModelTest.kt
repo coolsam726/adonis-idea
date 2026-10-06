@@ -18,6 +18,15 @@ class AdonisToolWindowModelTest {
             ),
         ),
         gates = setOf("update"),
+        shamar = AdonisIndex.ShamarEntry(
+            widgets = mapOf(
+                "ProductStatsWidget" to AdonisIndex.ShamarWidgetEntry(
+                    className = "ProductStatsWidget",
+                    panel = "admin",
+                    kind = "stats",
+                ),
+            ),
+        ),
     )
 
     @Test
@@ -46,6 +55,7 @@ class AdonisToolWindowModelTest {
         assertTrue(rows.none { it.name == "welcome" })
         val all = AdonisToolWindowModel.symbolRows(index())
         assertTrue(all.size >= 6)
+        assertTrue(all.any { it.kind == "shamar-widget" && it.name == "ProductStatsWidget" })
         assertTrue(all.first().kind <= all.last().kind)
     }
 }

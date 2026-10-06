@@ -1,10 +1,13 @@
 package dev.shamar.adonis.ide
 
 /**
- * Pure planner for Laravel-Idea-style DB introspection settings.
+ * Helpers for Laravel IDEA–style DB column sources.
  *
- * The IDE shell can later open a JDBC connection using [jdbcUrl]; this object
- * never opens sockets — it only derives connection hints from `.env` maps.
+ * - [fromEnv] / [buildJdbcUrl]: derive connection hints from `.env` (never opens sockets).
+ * - [mergeColumns]: union migration catalog with live Database tool columns.
+ *
+ * Live schema reading lives in [AdonisDbBridge] / [AdonisDasIntrospector];
+ * user choice is [AdonisDbSettings] (Settings → Tools → AdonisJS).
  */
 object AdonisDbIntrospection {
     data class Config(

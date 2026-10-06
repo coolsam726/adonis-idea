@@ -32,6 +32,7 @@ object AdonisFileTemplates {
             "service" -> service(trimmed)
             "wire" -> wire(trimmed)
             "panel" -> panel(trimmed)
+            "widget" -> widget(trimmed)
             else -> null
         }
     }
@@ -355,6 +356,42 @@ object AdonisFileTemplates {
                 export default class ${className(id)}Panel {
                   static id = '$id'
                   static path = '/$id'
+                }
+            """.trimIndent() + "\n",
+        )
+    }
+
+    fun widget(name: String): Spec {
+        val base = name.trim().removeSuffix("Widget")
+        val cls = className(base).let { if (it.endsWith("Widget")) it else "${it}Widget" }
+        val file = snake(cls.removeSuffix("Widget")) + "_widget"
+        return Spec(
+            relativePath = "app/widgets/admin/$file.ts",
+            contents = """
+                /**
+                 * Dashboard widget `$cls`.
+                 * Prefer `node ace shamar:make-widget $base --type=stats --panel=admin` when @shamar/adonis is installed.
+                 */
+                import {
+                  StatsOverviewWidget,
+                  Stat,
+                  type WidgetRequestContext,
+                } from '@shamar/core'
+
+                export class $cls extends StatsOverviewWidget {
+                  static override sort = 10
+                  static override columnSpan = 'full' as const
+                  static override heading = '${className(base)}'
+                  static override columns = 4
+                  static override isLazy = false
+                  static override pollingInterval: string | null = '5s'
+
+                  static override async stats(_ctx: WidgetRequestContext) {
+                    return [
+                      Stat.make('Total', 0).color('success'),
+                      Stat.make('Open', 0).color('warning'),
+                    ]
+                  }
                 }
             """.trimIndent() + "\n",
         )

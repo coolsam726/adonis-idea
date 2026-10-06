@@ -257,13 +257,25 @@ object AdonisIndexLoader {
                 path = stringOrNull(p, "path"),
             )
         }
+        val widgets = mutableMapOf<String, AdonisIndex.ShamarWidgetEntry>()
+        obj.getAsJsonObject("widgets")?.entrySet()?.forEach { (name, value) ->
+            val w = value.asJsonObject
+            widgets[name] = AdonisIndex.ShamarWidgetEntry(
+                className = stringOrEmpty(w, "class").ifBlank { name },
+                panel = stringOrEmpty(w, "panel"),
+                kind = stringOrNull(w, "kind"),
+                path = stringOrNull(w, "path"),
+            )
+        }
         return AdonisIndex.ShamarEntry(
             panels = obj.getAsJsonArray("panels")?.map { it.asString } ?: emptyList(),
             resources = resources,
             pages = pages,
+            widgets = widgets,
             navGroups = obj.getAsJsonArray("nav_groups")?.map { it.asString } ?: emptyList(),
             fieldTypes = obj.getAsJsonArray("field_types")?.map { it.asString } ?: emptyList(),
             columnTypes = obj.getAsJsonArray("column_types")?.map { it.asString } ?: emptyList(),
+            widgetTypes = obj.getAsJsonArray("widget_types")?.map { it.asString } ?: emptyList(),
             icons = obj.getAsJsonArray("icons")?.map { it.asString } ?: emptyList(),
         )
     }

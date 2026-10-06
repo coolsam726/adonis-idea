@@ -67,6 +67,15 @@ class AdonisProjectService(private val project: Project) {
         }
         indexRef.set(built)
         rebuildScheduled.set(false)
+        // Refresh live column cache off the EDT when Database tool enrichment is on.
+        try {
+            val source = AdonisDbSettings.getInstance(project).columnSource
+            if (source != AdonisColumnSource.MIGRATIONS) {
+                AdonisDbColumnCache.getInstance(project).refreshAsync()
+            }
+        } catch (_: Throwable) {
+            // Light tests / missing services
+        }
         return built
     }
 
@@ -144,6 +153,7 @@ class AdonisProjectService(private val project: Project) {
                 path.contains("/app/controllers/") ||
                 path.contains("/app/wire/") ||
                 path.contains("/app/panels/") ||
+                path.contains("/app/widgets/") ||
                 path.contains("/resources/views/") ||
                 path.contains("/database/migrations/") ||
                 file.name.startsWith(".env") ||
