@@ -335,11 +335,22 @@ function indexModels(base, orm) {
     const tableMatch = text.match(/static\s+table\s*=\s*['"`]([^'"`]+)['"`]/)
     const table = tableMatch?.[1] || pluralize(snake(name))
     const cols = {}
-    // declare foo: type / public foo: / @column() foo
-    const colRe = /(?:@column[^\n]*\n\s*|declare\s+|public\s+|readonly\s+)([a-zA-Z_]\w*)\s*[?:]/g
+    // @column({ columnName: 'country_id' }) declare countryId
+    const colNamedRe =
+      /@column\s*\(\s*\{([^}]*)\}\s*\)\s*(?:\n\s*)?(?:declare\s+|public\s+|readonly\s+)?([a-zA-Z_]\w*)/g
     let m
+    while ((m = colNamedRe.exec(text))) {
+      const opts = m[1]
+      const prop = m[2]
+      const loc = { path: file, line: lineOf(text, m.index) }
+      cols[prop] = loc
+      const dbName = opts.match(/columnName\s*:\s*['"`]([^'"`]+)['"`]/)?.[1]
+      if (dbName) cols[dbName] = loc
+    }
+    // declare foo: type / public foo: / @column() foo (no options object)
+    const colRe = /(?:@column[^\n]*\n\s*|declare\s+|public\s+|readonly\s+)([a-zA-Z_]\w*)\s*[?:]/g
     while ((m = colRe.exec(text))) {
-      cols[m[1]] = { path: file, line: lineOf(text, m.index) }
+      if (!cols[m[1]]) cols[m[1]] = { path: file, line: lineOf(text, m.index) }
     }
     // mongoose Schema paths
     const schemaRe = /(\w+)\s*:\s*\{[^}]*type\s*:/g
@@ -506,21 +517,35 @@ function indexWire(base) {
   return wire
 }
 
+function guessWidgetKind(text) {
+  if (/\bStatsOverviewWidget\b/.test(text)) return 'stats'
+  if (/\bListWidget\b/.test(text)) return 'list'
+  if (/\bChartWidget\b/.test(text)) return 'chart'
+  if (/\bCardWidget\b/.test(text)) return 'card'
+  if (/\bNavigationCardsWidget\b/.test(text)) return 'navigation-cards'
+  return null
+}
+
 function indexShamar(base, hasShamar) {
   const empty = {
     panels: [],
     resources: {},
     pages: {},
+    widgets: {},
     nav_groups: [],
     field_types: [],
     column_types: [],
+    widget_types: [],
     icons: [],
   }
-  if (!hasShamar && !existsSync(join(base, 'app', 'panels'))) return empty
+  const hasPanels = existsSync(join(base, 'app', 'panels'))
+  const hasWidgets = existsSync(join(base, 'app', 'widgets'))
+  if (!hasShamar && !hasPanels && !hasWidgets) return empty
 
   const panels = []
   const resources = {}
   const pages = {}
+  const widgets = {}
   const navGroups = new Set()
   const icons = new Set()
 
@@ -577,6 +602,25 @@ function indexShamar(base, hasShamar) {
     }
   }
 
+  const widgetsDir = join(base, 'app', 'widgets')
+  if (existsSync(widgetsDir)) {
+    for (const entry of readdirSync(widgetsDir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue
+      const panel = entry.name
+      for (const file of walk(join(widgetsDir, panel), (p, n) => /\.(ts|js)$/i.test(n))) {
+        const text = read(file)
+        const classMatch = text.match(/class\s+(\w+)/)
+        const name = classMatch?.[1] || basename(file).replace(/\.(ts|js)$/, '')
+        widgets[name] = {
+          class: name,
+          panel,
+          kind: guessWidgetKind(text),
+          path: file,
+        }
+      }
+    }
+  }
+
   // Convention Shamar routes
   for (const panel of panels) {
     // indexed later in routes merge by caller if needed
@@ -586,6 +630,7 @@ function indexShamar(base, hasShamar) {
     panels,
     resources,
     pages,
+    widgets,
     nav_groups: [...navGroups],
     field_types: [
       'TextInput', 'Textarea', 'Select', 'Toggle', 'Checkbox', 'Radio', 'CheckboxList',
@@ -596,6 +641,10 @@ function indexShamar(base, hasShamar) {
     ],
     column_types: [
       'TextColumn', 'IconColumn', 'ImageColumn', 'ColorColumn',
+    ],
+    widget_types: [
+      'StatsOverviewWidget', 'ListWidget', 'ChartWidget', 'CardWidget',
+      'NavigationCardsWidget', 'Stat',
     ],
     icons: [...icons],
   }
@@ -624,7 +673,7 @@ function indexAceCommands(base) {
     'make:policy', 'make:service', 'list:routes', 'migration:run', 'migration:rollback',
     'db:seed', 'serve', 'build', 'test',
     // Shamar (soft — shown when shamar detected)
-    'make:wire', 'make:panel', 'publish:auth',
+    'make:wire', 'make:panel', 'shamar:make-widget', 'shamar:publish-auth',
   ]
   return commands
 }
@@ -636,6 +685,8 @@ const EDGE_DIRECTIVES = [
   'debugger', 'newError', 'dump', 'section', 'layout', 'page',
   // Shamar / Wire tags (always known to lexer; completions gated elsewhere)
   'wire', 'persist', 'end',
+  // Inertia void tags
+  'inertia', 'inertiaHead', 'viteReactRefresh',
 ]
 
 /** Globals Adonis / Edge share with every template (seeded; not scanned). */
@@ -669,8 +720,13 @@ function build() {
   const routes = indexRoutes(root)
   const controllers = indexControllers(root)
 
+  const shamarActive =
+    shamar ||
+    shamarIndex.panels.length > 0 ||
+    Object.keys(shamarIndex.widgets).length > 0
+
   // Inject convention Shamar route names
-  if (shamar || shamarIndex.panels.length) {
+  if (shamarActive) {
     for (const panel of shamarIndex.panels) {
       for (const [slug] of Object.entries(shamarIndex.resources)) {
         const names = [
@@ -708,13 +764,19 @@ function build() {
     }
   }
 
+  const viewHelpers = { ...EDGE_VIEW_HELPERS }
+  if (shamarActive) {
+    viewHelpers.isDialogPageMode = { kind: 'helper' }
+    viewHelpers.dialogPresentation = { kind: 'helper' }
+  }
+
   return {
     ok: true,
     error: null,
     base_path: root,
     framework: {
       adonis: true,
-      shamar: shamar || shamarIndex.panels.length > 0,
+      shamar: shamarActive,
       wire,
       orm,
     },
@@ -741,7 +803,7 @@ function build() {
     ace_commands: indexAceCommands(root),
     validation_rules: ['required', 'email', 'minLength', 'maxLength', 'unique', 'confirmed', 'trim', 'optional'],
     directives: EDGE_DIRECTIVES,
-    view_helpers: EDGE_VIEW_HELPERS,
+    view_helpers: viewHelpers,
     view_shared: {
       auth: { kind: 'shared' },
       request: { kind: 'shared' },

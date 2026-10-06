@@ -17,6 +17,8 @@ object EdgeTagRegistry {
         "vite", "stack", "pushTo", "svg",
         "debugger", "newError", "dump",
         "wire", "persist",
+        // Inertia root-template tags (void — never take @end).
+        "inertia", "inertiaHead", "viteReactRefresh",
         // Hypermedia starter-kit tag components (accepted while typing, before `(`).
         "form", "link", "button", "avatar",
         "end",
@@ -36,6 +38,8 @@ object EdgeTagRegistry {
         "include", "includeIf", "includeWhen", "includeUnless",
         "svg", "vite", "inject", "eval", "let", "assign",
         "debugger", "newError", "dump", "stack",
+        // @inertia() / @inertiaHead() / @viteReactRefresh() — self-closing package tags
+        "inertia", "inertiaHead", "viteReactRefresh",
     )
 
     /** May self-close when args include a top-level comma (value form). */

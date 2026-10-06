@@ -109,9 +109,16 @@ class AdonisFullParityTest {
                     "path": "/tmp/settings_page.ts"
                   }
                 },
+                "widgets": {
+                  "ProductStatsWidget": {
+                    "class": "ProductStatsWidget", "panel": "admin", "kind": "stats",
+                    "path": "/tmp/app/widgets/admin/product_stats_widget.ts"
+                  }
+                },
                 "nav_groups": ["CRM", "System"],
-                "field_types": ["TextInput", "Select", "Toggle"],
+                "field_types": ["TextInput", "Select", "Toggle", "RelationTable"],
                 "column_types": ["TextColumn"],
+                "widget_types": ["StatsOverviewWidget", "Stat"],
                 "icons": ["users", "cog"]
               }
             }
@@ -135,9 +142,16 @@ class AdonisFullParityTest {
         assertTrue(index.known(SymbolKind.SHAMAR_FIELD, "TextInput"))
         assertTrue(index.known(SymbolKind.SHAMAR_COLUMN, "TextColumn"))
         assertTrue(index.known(SymbolKind.SHAMAR_NAV, "CRM"))
+        assertTrue(index.known(SymbolKind.SHAMAR_WIDGET, "ProductStatsWidget"))
+        assertTrue(index.known(SymbolKind.SHAMAR_WIDGET, "StatsOverviewWidget"))
+        assertTrue(index.known(SymbolKind.SHAMAR_LITERAL, "sidebar"))
         assertFalse(index.known(SymbolKind.WIRE, "missing"))
         assertEquals("counter", index.wireNameForPath("/tmp/app/wire/counter.ts"))
         assertEquals("pages/home", index.viewNameForPath("/tmp/adonis-app/resources/views/pages/home.edge"))
+        assertEquals(
+            AdonisSymbolResolver.Target("/tmp/app/widgets/admin/product_stats_widget.ts", 0),
+            AdonisSymbolResolver.resolve(index, SymbolKind.SHAMAR_WIDGET, "ProductStatsWidget"),
+        )
     }
 
     @Test
@@ -163,6 +177,12 @@ class AdonisFullParityTest {
         assertTrue("TextInput" in names(SymbolKind.SHAMAR_FIELD))
         assertTrue("TextColumn" in names(SymbolKind.SHAMAR_COLUMN))
         assertTrue("CRM" in names(SymbolKind.SHAMAR_NAV))
+        assertTrue("ProductStatsWidget" in names(SymbolKind.SHAMAR_WIDGET))
+        assertTrue("StatsOverviewWidget" in names(SymbolKind.SHAMAR_WIDGET))
+        assertTrue("sidebar" in names(SymbolKind.SHAMAR_LITERAL, ShamarLiterals.PRESENTATION))
+        assertTrue("embed" in names(SymbolKind.SHAMAR_LITERAL, ShamarLiterals.OPEN_IN))
+        assertTrue("fullscreen" in names(SymbolKind.SHAMAR_LITERAL, ShamarLiterals.PAGE_MODE))
+        assertTrue("success" in names(SymbolKind.SHAMAR_LITERAL, ShamarLiterals.STAT_COLOR))
         assertTrue("make:controller" in names(SymbolKind.ACE))
         assertTrue("if" in names(SymbolKind.DIRECTIVE))
         assertTrue("email" in names(SymbolKind.COLUMN, "User"))
@@ -192,8 +212,15 @@ class AdonisFullParityTest {
             """User.query().preload('po""" to SymbolKind.RELATION,
             """middleware(['au""" to SymbolKind.MIDDLEWARE,
             """TextInput.make('""" to SymbolKind.SHAMAR_FIELD,
+            """RelationTable.make('""" to SymbolKind.SHAMAR_FIELD,
             """TextColumn.make('""" to SymbolKind.SHAMAR_COLUMN,
             """static navigationGroup = 'CR""" to SymbolKind.SHAMAR_NAV,
+            """.openIn('mod""" to SymbolKind.SHAMAR_LITERAL,
+            """.presentation('side""" to SymbolKind.SHAMAR_LITERAL,
+            """static createMode = 'full""" to SymbolKind.SHAMAR_LITERAL,
+            """static editMode: 'side""" to SymbolKind.SHAMAR_LITERAL,
+            """.color('suc""" to SymbolKind.SHAMAR_LITERAL,
+            """.descriptionColor('warn""" to SymbolKind.SHAMAR_LITERAL,
             """.as('home""" to SymbolKind.ROUTE,
             """@ea""" to SymbolKind.DIRECTIVE,
             """{{ tit""" to SymbolKind.TEMPLATE_VAR,

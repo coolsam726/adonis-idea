@@ -1,7 +1,7 @@
 # AdonisJS plugin — feature parity matrix
 
 Maps **Laravel IDEA** feature categories and **almasix-idea** surfaces onto
-AdonisJS plugin. Status as of **0.3.6**.
+AdonisJS plugin. Status as of **0.3.7** (Shamar 1.0.10 catch-up).
 
 Legend: **full** = shipped · **partial** = useful MVP · **planned** = not yet
 
@@ -28,9 +28,12 @@ Legend: **full** = shipped · **partial** = useful MVP · **planned** = not yet
 | Category | Target | Status |
 |----------|--------|--------|
 | Lucid models + relations | columns / `preload` / stubs | full |
+| Lucid column case | query: snake+camel; attr: camel | full |
+| `@column({ columnName })` aliases | indexed with property | full |
 | Migration column index | `database/migrations` | full |
-| Mongoose schemas | detect + path completion | partial |
-| Live DB introspection | JDBC from `DB_*` | partial (planner; connect UI next) |
+| Mongoose schemas | detect + path completion (exact keys) | partial |
+| Live DB via Database tool | Settings source + DataSource cache | full |
+| `.env` → JDBC URL planner | create/match hints | partial (no auto-create DS yet) |
 
 ## Wire (≈ Livewire)
 
@@ -42,16 +45,20 @@ Legend: **full** = shipped · **partial** = useful MVP · **planned** = not yet
 | GTD class ↔ view | full |
 | `make:wire` | full (Ace when present; offline stub else) |
 
-## Shamar (detection-gated)
+## Shamar (detection-gated; aligned with `@shamar/*` 1.0.10)
 
 | Category | Status |
 |----------|--------|
 | Discover resources / pages / panels | full |
+| Discover `app/widgets/**` + widget type catalog | full |
 | Navigation groups / icons | full |
-| Field / column type catalogs | full |
+| Field / column type catalogs (incl. RelationTable) | full |
 | Convention `shamar.{panel}.*` routes | full |
 | `shamar::` / `wire::` views | full |
-| Builder chain intelligence | partial (types + `make(` sites) |
+| Action `openIn` / `presentation` / page modes / Stat colors | full (string-enum sites) |
+| Edge helpers `isDialogPageMode` / `dialogPresentation` | full (when Shamar detected) |
+| `make:wire` / `make:panel` / `shamar:make-widget` | full (Ace when present; offline stub else) |
+| Builder chain intelligence | partial (`make(` + enums; no-arg TS chains via package types) |
 | Cherubim / REST soft completion | planned |
 
 ## Explicit non-goals

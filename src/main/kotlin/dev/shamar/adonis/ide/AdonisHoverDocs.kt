@@ -112,6 +112,21 @@ object AdonisHoverDocs {
                 if (p == null) "**shamar page** `$name`\n\n_Unknown._"
                 else "**shamar page** `$name`\n\n${p.label} · panel `${p.panel}`"
             }
+            SymbolKind.SHAMAR_WIDGET -> {
+                val w = index.shamar.widgets[name]
+                when {
+                    w != null -> {
+                        val kindLabel = w.kind?.let { " · $it" }.orEmpty()
+                        "**shamar widget** `$name`\n\npanel `${w.panel}`$kindLabel"
+                    }
+                    name in index.shamar.widgetTypes -> "**shamar widget type** `$name`"
+                    else -> "**shamar widget** `$name`\n\n_Unknown._"
+                }
+            }
+            SymbolKind.SHAMAR_LITERAL -> {
+                val family = receiver ?: "value"
+                "**shamar** `${ShamarLiterals.detailFor(family)}` `$name`"
+            }
             else -> {
                 if (index.known(kind, name)) "**${kind.name.lowercase()}** `$name`"
                 else null

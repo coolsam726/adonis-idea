@@ -19,7 +19,9 @@ class AdonisMakeCatalogTest {
         )
         assertTrue(ids.contains("wire"))
         assertTrue(ids.contains("panel"))
-        assertTrue(AdonisMakeCatalog.ALL.size >= 16)
+        assertTrue(ids.contains("widget"))
+        assertEquals("shamar:make-widget", AdonisMakeCatalog.byId("widget")!!.command)
+        assertTrue(AdonisMakeCatalog.ALL.size >= 17)
     }
 
     @Test
@@ -53,7 +55,21 @@ class AdonisMakeCatalogTest {
 
     @Test
     fun commandsAreMakePrefixed() {
-        assertTrue(AdonisMakeCatalog.ALL.all { it.command.startsWith("make:") })
+        assertTrue(
+            AdonisMakeCatalog.ALL.all {
+                it.command.startsWith("make:") || it.command.startsWith("shamar:")
+            },
+        )
         assertTrue(AdonisMakeCatalog.ALL.all { it.id.isNotBlank() && it.label.isNotBlank() })
+    }
+
+    @Test
+    fun widgetOfflineStub() {
+        val spec = AdonisFileTemplates.resolve("widget", "ProductStats")
+        assertNotNull(spec)
+        assertEquals("app/widgets/admin/product_stats_widget.ts", spec!!.relativePath)
+        assertTrue(spec.contents.contains("ProductStatsWidget"))
+        assertTrue(spec.contents.contains("StatsOverviewWidget"))
+        assertTrue(spec.contents.contains("Stat.make"))
     }
 }

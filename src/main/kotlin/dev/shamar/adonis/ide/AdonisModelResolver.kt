@@ -1,9 +1,14 @@
 package dev.shamar.adonis.ide
 
+import com.intellij.openapi.project.Project
+
 /**
  * Resolve model / table hints to migration columns (and auth user → User).
  * Lucid relation / query method vocabulary: hasMany, belongsTo, hasOne, manyToMany,
  * preload, withCount, where, whereIn, orderBy, select.
+ *
+ * When [project] is provided, column names are also enriched from the Database tool
+ * according to [AdonisDbSettings] (migrations / connection / both).
  */
 object AdonisModelResolver {
     const val AUTH_USER_SENTINEL = "__auth_user__"
@@ -82,25 +87,86 @@ object AdonisModelResolver {
     }
 
     /**
-     * Columns for a model/table hint: migration schema first, then fillable/casts.
+     * Columns for a model/table hint: migration/model catalog, optionally merged with
+     * live Database tool columns (see [AdonisDbSettings]).
+     *
      * Unknown receivers (e.g. Blueprint ``table.``) return empty — never dump every
      * column in the database.
      */
-    fun columnsFor(index: AdonisIndex, hint: String?): Set<String> {
+    fun columnsFor(
+        index: AdonisIndex,
+        hint: String?,
+        project: Project? = null,
+        sourceOverride: AdonisColumnSource? = null,
+        liveOverride: Set<String>? = null,
+    ): Set<String> {
         if (hint.isNullOrBlank()) return emptySet()
         if (hint == AUTH_USER_SENTINEL) {
-            return columnsForResolved(index, authUserModel(index))
+            return mergeWithLive(
+                index,
+                columnsForResolved(index, authUserModel(index)),
+                resolveTable(index, AUTH_USER_SENTINEL),
+                project,
+                sourceOverride,
+                liveOverride,
+            )
         }
         val peeled = peelModelHint(hint)
         if (peeled in SKIP || peeled.equals("table", ignoreCase = true)) {
             return emptySet()
         }
         val tableName = resolveTable(index, hint)
-        if (tableName != null) {
-            val cols = index.tables[tableName]?.columns?.keys.orEmpty()
-            if (cols.isNotEmpty()) return cols
+        val migrationOrModel = when {
+            tableName != null && !index.tables[tableName]?.columns.isNullOrEmpty() ->
+                index.tables[tableName]!!.columns.keys
+            else -> columnsForResolved(index, peeled)
         }
-        return columnsForResolved(index, peeled)
+        return mergeWithLive(index, migrationOrModel, tableName, project, sourceOverride, liveOverride)
+    }
+
+    /**
+     * Pure merge used by tests and [columnsFor].
+     * [DATABASE] falls back to migrations when the live set is empty.
+     */
+    fun mergeColumnSources(
+        migrations: Set<String>,
+        live: Set<String>,
+        source: AdonisColumnSource,
+    ): Set<String> = when (source) {
+        AdonisColumnSource.MIGRATIONS -> migrations
+        AdonisColumnSource.DATABASE -> if (live.isNotEmpty()) live else migrations
+        AdonisColumnSource.BOTH -> AdonisDbIntrospection.mergeColumns(migrations, live)
+    }
+
+    private fun mergeWithLive(
+        index: AdonisIndex,
+        migrations: Set<String>,
+        tableName: String?,
+        project: Project?,
+        sourceOverride: AdonisColumnSource?,
+        liveOverride: Set<String>?,
+    ): Set<String> {
+        val source = sourceOverride
+            ?: project?.let { AdonisDbSettings.getInstance(it).columnSource }
+            ?: AdonisColumnSource.MIGRATIONS
+        if (source == AdonisColumnSource.MIGRATIONS || tableName.isNullOrBlank()) {
+            return migrations
+        }
+        val live = liveOverride ?: AdonisDbColumnCache.liveColumns(project, tableName)
+        return mergeColumnSources(migrations, live, source)
+    }
+
+    /** ORM detail for a model/table hint (`lucid`, `mongoose`, …). */
+    fun ormFor(index: AdonisIndex, hint: String?): String? {
+        if (hint.isNullOrBlank()) return index.framework.orm
+        val tableName = resolveTable(index, hint)
+        if (tableName != null) {
+            val detail = index.tables[tableName]?.detail?.ifBlank { null }
+            if (detail != null) return detail
+        }
+        val peeled = if (hint == AUTH_USER_SENTINEL) authUserModel(index) else peelModelHint(hint)
+        index.modelMetadata[peeled]?.orm?.ifBlank { null }?.let { return it }
+        return index.framework.orm?.ifBlank { null }
     }
 
     private fun columnsForResolved(index: AdonisIndex, model: String): Set<String> {

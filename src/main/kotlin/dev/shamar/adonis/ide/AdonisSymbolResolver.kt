@@ -58,6 +58,10 @@ object AdonisSymbolResolver {
             SymbolKind.RELATION -> resolveRelation(index, name, receiver)
             SymbolKind.TEMPLATE_VAR -> resolveTemplateVar(index, name, viewName)
             SymbolKind.CONTROLLER_ACTION -> resolveControllerAction(index, name, receiver)
+            SymbolKind.SHAMAR_WIDGET -> {
+                val path = index.shamar.widgets[name]?.path ?: return null
+                Target(path)
+            }
             else -> null
         }
     }

@@ -59,9 +59,10 @@ class AdonisCompletionContributor : CompletionContributor() {
                         return
                     }
 
-                    // Prop keys / method|variant literals work without a warm index.
+                    // Prop keys / method|variant / Shamar builder literals work without a warm index.
                     val indexOptional = site?.kind == SymbolKind.EDGE_PROP_KEY ||
-                        site?.kind == SymbolKind.EDGE_LITERAL
+                        site?.kind == SymbolKind.EDGE_LITERAL ||
+                        site?.kind == SymbolKind.SHAMAR_LITERAL
                     if (!indexOptional && !index.ok && index.views.isEmpty() && index.routes.isEmpty()) {
                         return
                     }
@@ -80,7 +81,7 @@ class AdonisCompletionContributor : CompletionContributor() {
                         return
                     }
 
-                    val items = AdonisCompletionCatalog.symbolsFor(index, site, before)
+                    val items = AdonisCompletionCatalog.symbolsFor(index, site, before, project)
                     val prefixed = result.withPrefixMatcher(site.prefix)
                     for ((label, detail) in items) {
                         if (!label.startsWith(site.prefix) && site.prefix.isNotEmpty()) {

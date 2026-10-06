@@ -27,9 +27,12 @@ object AdonisLucidHelpers {
         }
     }
 
-    /** `where('email', …)` column helpers. */
+    /** `where('email', …)` column helpers (Lucid: snake + camel). */
     fun whereColumnSnippets(index: AdonisIndex, receiver: String?): List<Snippet> {
-        val cols = AdonisCompletionCatalog.columnsFor(index, receiver).sorted()
+        val cols = AdonisColumnNames.forQuery(
+            AdonisModelResolver.columnsFor(index, receiver, project = null),
+            AdonisModelResolver.ormFor(index, receiver),
+        )
         val recv = receiver?.substringAfterLast('.') ?: "query"
         return cols.map { col ->
             Snippet(

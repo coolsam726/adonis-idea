@@ -87,6 +87,13 @@ object AdonisToolWindowModel {
         for ((name, page) in index.shamar.pages) {
             if (match(name)) out.add(SymbolRow("shamar-page", name, page.label))
         }
+        for ((name, widget) in index.shamar.widgets) {
+            if (match(name)) {
+                val detail = listOfNotNull(widget.panel.ifBlank { null }, widget.kind)
+                    .joinToString(" · ")
+                out.add(SymbolRow("shamar-widget", name, detail))
+            }
+        }
         return out.sortedWith(compareBy({ it.kind }, { it.name }))
     }
 }

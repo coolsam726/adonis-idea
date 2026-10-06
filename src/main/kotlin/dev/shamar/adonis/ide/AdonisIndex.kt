@@ -79,10 +79,19 @@ data class AdonisIndex(
         val panels: List<String> = emptyList(),
         val resources: Map<String, ShamarResourceEntry> = emptyMap(),
         val pages: Map<String, ShamarPageEntry> = emptyMap(),
+        val widgets: Map<String, ShamarWidgetEntry> = emptyMap(),
         val navGroups: List<String> = emptyList(),
         val fieldTypes: List<String> = emptyList(),
         val columnTypes: List<String> = emptyList(),
+        val widgetTypes: List<String> = emptyList(),
         val icons: List<String> = emptyList(),
+    )
+
+    data class ShamarWidgetEntry(
+        val className: String = "",
+        val panel: String = "",
+        val kind: String? = null,
+        val path: String? = null,
     )
 
     data class ShamarResourceEntry(
@@ -190,12 +199,15 @@ data class AdonisIndex(
         SymbolKind.WIRE_METHOD -> wireComponents.values.any { name in it.methods }
         SymbolKind.SHAMAR_RESOURCE -> shamar.resources.containsKey(name)
         SymbolKind.SHAMAR_PAGE -> shamar.pages.containsKey(name)
+        SymbolKind.SHAMAR_WIDGET ->
+            shamar.widgets.containsKey(name) || shamar.widgetTypes.contains(name)
         SymbolKind.SHAMAR_FIELD -> shamar.fieldTypes.contains(name) ||
             shamar.resources.values.any { it.slug == name || it.label == name }
         SymbolKind.SHAMAR_COLUMN -> shamar.columnTypes.contains(name)
         SymbolKind.SHAMAR_NAV -> shamar.navGroups.contains(name)
         SymbolKind.COLUMN, SymbolKind.RELATION, SymbolKind.DIRECTIVE, SymbolKind.ATTR,
-        SymbolKind.MODEL_ATTR, SymbolKind.EDGE_LITERAL, SymbolKind.EDGE_PROP_KEY -> true
+        SymbolKind.MODEL_ATTR, SymbolKind.EDGE_LITERAL, SymbolKind.EDGE_PROP_KEY,
+        SymbolKind.SHAMAR_LITERAL -> true
     }
 
     fun templateVarNames(): Set<String> =
@@ -276,9 +288,12 @@ enum class SymbolKind {
     WIRE_METHOD,
     SHAMAR_RESOURCE,
     SHAMAR_PAGE,
+    SHAMAR_WIDGET,
     SHAMAR_FIELD,
     SHAMAR_COLUMN,
     SHAMAR_NAV,
+    /** Shamar builder string enums (`openIn`, `presentation`, page modes, Stat colors). */
+    SHAMAR_LITERAL,
     /** Fixed Edge / starter-kit string literals (`method`, `variant`, …). */
     EDGE_LITERAL,
     /** Object-literal prop keys inside `@tag({ | })`. Receiver = tag name. */

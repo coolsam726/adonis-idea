@@ -57,6 +57,13 @@ object AdonisMakeCatalog {
         // Optional Shamar / Wire generators (soft — Ace may reject if package absent)
         Generator("wire", "Wire Component", "make:wire", "Wire component name (e.g. counter)"),
         Generator("panel", "Panel", "make:panel", "Panel id (e.g. admin)"),
+        Generator(
+            "widget",
+            "Widget",
+            "shamar:make-widget",
+            "Widget name (e.g. ProductStats)",
+            description = "Scaffold under app/widgets/{panel}. Defaults: --type=stats --panel=admin",
+        ),
     )
 
     fun byId(id: String): Generator? = ALL.firstOrNull { it.id == id }

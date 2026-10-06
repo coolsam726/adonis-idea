@@ -53,6 +53,29 @@ class EdgeGuideFidelityTest : BasePlatformTestCase() {
 
     fun `test dump is void`() {
         assertTrue(AdonisEdgeStructure.analyze("@dump(posts)\n<p>x</p>").isEmpty())
+        assertTrue(
+            "inertia void",
+            AdonisEdgeStructure.analyze(
+                """
+                <head>
+                  @inertiaHead()
+                  @viteReactRefresh()
+                  @vite(['inertia/app.tsx'])
+                </head>
+                <body>
+                  @inertia()
+                  @inertia({ as: 'main' })
+                </body>
+                """.trimIndent(),
+            ).isEmpty(),
+        )
+        // Wire / persist remain real block openers (unlike Inertia void tags).
+        assertTrue(
+            AdonisEdgeStructure.analyze("@wire('counter')\n  x\n@end").isEmpty(),
+        )
+        assertTrue(
+            AdonisEdgeStructure.analyze("@wire('counter')\n  x").isNotEmpty(),
+        )
         assertTrue(EdgeDirectives.NAMES.contains("dump"))
     }
 

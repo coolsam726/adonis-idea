@@ -162,9 +162,15 @@ Or run Ace from a run configuration: **Run → Edit Configurations → + → Ace
 <details>
 <summary><strong>ORM & database</strong></summary>
 
-- Lucid models + migration columns; `where` / `preload` chain completion  
-- Mongoose schema awareness when detected  
-- DB connection hints planned from `.env` (`DB_*`)  
+- Indexes `app/models/**` properties (and `@column({ columnName })` aliases) plus
+  `database/migrations` column strings into a shared column catalog  
+- **Lucid queries** (`where` / `orderBy` / `select` …): snake_case **and** camelCase  
+- **Model attributes** (`user.countryId`, `fillable`): camelCase  
+- **Mongoose** (incl. Shamar): schema path names as defined (usually camelCase; no forced snake aliases)  
+- **Database tool columns** (Laravel IDEA–style): Settings → Tools → AdonisJS  
+  - Source: migrations only · Database tool connection · connection + migrations  
+  - Pick a DataSource from the Database tool; click **Refresh schema cache** after connecting  
+  - Requires the bundled Database Tools plugin (optional dependency — falls back to migrations)  
 
 </details>
 

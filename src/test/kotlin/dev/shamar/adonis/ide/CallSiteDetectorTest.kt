@@ -84,6 +84,31 @@ class CallSiteDetectorTest {
     }
 
     @Test
+    fun shamarLiteralSites() {
+        val openIn = CallSiteDetector.detect(""".openIn('emb""")
+        assertEquals(SymbolKind.SHAMAR_LITERAL, openIn!!.kind)
+        assertEquals(ShamarLiterals.OPEN_IN, openIn.receiver)
+        assertEquals("emb", openIn.prefix)
+
+        val presentation = CallSiteDetector.detect(""".presentation('side""")
+        assertEquals(SymbolKind.SHAMAR_LITERAL, presentation!!.kind)
+        assertEquals(ShamarLiterals.PRESENTATION, presentation.receiver)
+
+        val pageMode = CallSiteDetector.detect("""static viewMode = 'full""")
+        assertEquals(SymbolKind.SHAMAR_LITERAL, pageMode!!.kind)
+        assertEquals(ShamarLiterals.PAGE_MODE, pageMode.receiver)
+
+        val color = CallSiteDetector.detect(""".chartColor('dang""")
+        assertEquals(SymbolKind.SHAMAR_LITERAL, color!!.kind)
+        assertEquals(ShamarLiterals.STAT_COLOR, color.receiver)
+
+        assertEquals(SymbolKind.SHAMAR_FIELD, CallSiteDetector.detect("""RelationTable.make('ord""")!!.kind)
+        assertTrue(ShamarLiterals.valuesFor(ShamarLiterals.OPEN_IN).contains("download"))
+        assertEquals("DialogPresentation", ShamarLiterals.detailFor(ShamarLiterals.PRESENTATION))
+        assertTrue(ShamarLiterals.valuesFor("unknown").isEmpty())
+    }
+
+    @Test
     fun routeAs() {
         val site = CallSiteDetector.detect(""".as('posts.""")
         assertEquals(SymbolKind.ROUTE, site!!.kind)

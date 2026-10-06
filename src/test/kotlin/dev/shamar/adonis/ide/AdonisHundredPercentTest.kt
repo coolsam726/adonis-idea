@@ -139,9 +139,19 @@ class AdonisHundredPercentTest {
                 "label": "", "icon": null, "path": "/tmp/sp.ts"
               }
             },
+            "widgets": {
+              "ProductStatsWidget": {
+                "class": "ProductStatsWidget", "panel": "admin", "kind": "stats",
+                "path": "/tmp/app/widgets/admin/product_stats_widget.ts"
+              },
+              "BareWidget": {
+                "class": "", "panel": "", "path": null
+              }
+            },
             "nav_groups": ["CRM"],
             "field_types": ["TextInput"],
             "column_types": ["TextColumn"],
+            "widget_types": ["StatsOverviewWidget", "Stat"],
             "icons": ["users"]
           }
         }
@@ -209,6 +219,10 @@ class AdonisHundredPercentTest {
         site(SymbolKind.WIRE_PROP, null)
         site(SymbolKind.SHAMAR_RESOURCE)
         site(SymbolKind.SHAMAR_PAGE)
+        site(SymbolKind.SHAMAR_WIDGET)
+        site(SymbolKind.SHAMAR_LITERAL, ShamarLiterals.OPEN_IN)
+        site(SymbolKind.SHAMAR_LITERAL, ShamarLiterals.PRESENTATION)
+        site(SymbolKind.SHAMAR_LITERAL, null)
         site(SymbolKind.MODEL_ATTR, "User")
         site(SymbolKind.COLUMN, "User")
         site(SymbolKind.COLUMN, AdonisModelResolver.AUTH_USER_SENTINEL)
@@ -535,6 +549,17 @@ class AdonisHundredPercentTest {
         AdonisHoverDocs.forSymbol(index, SymbolKind.TEMPLATE_VAR, "missing")
         AdonisHoverDocs.forSymbol(index, SymbolKind.SHAMAR_RESOURCE, "missing")
         AdonisHoverDocs.forSymbol(index, SymbolKind.SHAMAR_PAGE, "missing")
+        AdonisHoverDocs.forSymbol(index, SymbolKind.SHAMAR_WIDGET, "missing")
+        AdonisHoverDocs.forSymbol(index, SymbolKind.SHAMAR_WIDGET, "StatsOverviewWidget")
+        assertNotNull(AdonisHoverDocs.forSymbol(index, SymbolKind.SHAMAR_WIDGET, "ProductStatsWidget"))
+        assertNotNull(AdonisHoverDocs.forSymbol(index, SymbolKind.SHAMAR_WIDGET, "BareWidget"))
+        AdonisHoverDocs.forSymbol(
+            index,
+            SymbolKind.SHAMAR_LITERAL,
+            "sidebar",
+            receiver = ShamarLiterals.PRESENTATION,
+        )
+        AdonisHoverDocs.forSymbol(index, SymbolKind.SHAMAR_LITERAL, "modal", receiver = null)
         AdonisHoverDocs.forSymbol(index, SymbolKind.DISK, "fs")
         AdonisLucidHelpers.eagerLoadSnippets(index, null)
         AdonisLucidHelpers.whereColumnSnippets(index, null)
