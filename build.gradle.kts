@@ -66,6 +66,10 @@ intellijPlatform {
         changeNotes.set(
             """
             <ul>
+              <li>0.4.0 — Shamar 1.0.10 catch-up (enums/widgets/make-widget);
+                  Inertia void tags; Edge CSS custom-property suppress; Lucid
+                  snake/camel columns; Database tool column sources
+                  (Settings → Tools → AdonisJS).</li>
               <li>0.3.6 — GitHub Funding (Sponsors + Ko-fi); README Marketplace
                   badge CTA (no iframe).</li>
               <li>0.3.5 — WebStorm-only product scope; Marketplace-first README

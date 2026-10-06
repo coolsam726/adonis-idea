@@ -1,7 +1,7 @@
 # AdonisJS plugin — feature parity matrix
 
 Maps **Laravel IDEA** feature categories and **almasix-idea** surfaces onto
-AdonisJS plugin. Status as of **0.3.7** (Shamar 1.0.10 catch-up).
+AdonisJS plugin. Status as of **0.4.0** (Shamar 1.0.10 catch-up).
 
 Legend: **full** = shipped · **partial** = useful MVP · **planned** = not yet
 
