@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0
 
 - Shamar 1.0.8–1.0.10 catch-up: complete `openIn` / `presentation` / `createMode|editMode|viewMode` / Stat color enums
 - Index `app/widgets/**`, seed widget types (`StatsOverviewWidget`, `Stat`, …), Edge helpers `isDialogPageMode` / `dialogPresentation`
