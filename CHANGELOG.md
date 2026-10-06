@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1
+
+- Database tool columns: introspect via `LocalDataSource` (not empty `DbPsiFacade`); Settings status shows a concrete diagnose message when the schema model is empty
+
 ## 0.4.0
 
 - Shamar 1.0.8–1.0.10 catch-up: complete `openIn` / `presentation` / `createMode|editMode|viewMode` / Stat color enums

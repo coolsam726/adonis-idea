@@ -79,15 +79,23 @@ class AdonisDbColumnCache(private val project: Project) {
                 lastRefreshMs.set(System.currentTimeMillis())
                 return
             }
-            // Warm known tables from the Adonis index so we query by name.
+            // Always pull the full introspected schema from the Database tool first.
+            // (Per-table lookups used to target DbPsiFacade only, which is often empty.)
+            val next = ConcurrentHashMap<String, Set<String>>()
+            val all = AdonisDasIntrospector.introspectAllTables(
+                project,
+                ref.name,
+                ref.uniqueId,
+            )
+            for ((t, cols) in all) {
+                next[t.lowercase()] = cols
+            }
+            // Also map Adonis index table names → columns (alias / case variants).
             val index = AdonisProjectService.getInstance(project).cachedIndex()
                 ?: AdonisProjectService.getInstance(project).index()
-            val tables = linkedSetOf<String>()
-            tables.addAll(index.tables.keys)
-            index.modelMetadata.values.map { it.table }.filter { it.isNotBlank() }.forEach { tables.add(it) }
-
-            val next = ConcurrentHashMap<String, Set<String>>()
-            for (table in tables) {
+            for (table in index.tables.keys + index.modelMetadata.values.map { it.table }) {
+                if (table.isBlank()) continue
+                if (next.containsKey(table.lowercase())) continue
                 val cols = AdonisDbBridge.columnsForTable(
                     project,
                     table,
@@ -98,17 +106,6 @@ class AdonisDbColumnCache(private val project: Project) {
                     next[table.lowercase()] = cols
                 }
             }
-            // Also pull every table from DAS when index list is empty / sparse.
-            if (next.isEmpty() || tables.isEmpty()) {
-                val all = AdonisDasIntrospector.introspectAllTables(
-                    project,
-                    ref.name,
-                    ref.uniqueId,
-                )
-                for ((t, cols) in all) {
-                    next[t.lowercase()] = cols
-                }
-            }
             byTable.clear()
             byTable.putAll(next)
             tableCount.set(next.size.toLong())
@@ -117,7 +114,7 @@ class AdonisDbColumnCache(private val project: Project) {
                     next.isEmpty() && !AdonisDbBridge.isDatabasePluginAvailable() ->
                         "Database plugin is not enabled"
                     next.isEmpty() ->
-                        "No columns loaded — connect/refresh the DataSource schema in the Database tool"
+                        AdonisDasIntrospector.diagnose(project, ref.name, ref.uniqueId)
                     else -> null
                 },
             )
